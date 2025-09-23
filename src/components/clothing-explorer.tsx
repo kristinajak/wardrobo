@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -92,7 +93,7 @@ function buildQuery(params: Filters) {
   return query.toString();
 }
 
-const ClothingExplorer = () => {
+export const ClothingExplorer = () => {
   const [filters, setFilters] = useState<Filters>({
     search: "",
     category: "",
@@ -267,6 +268,8 @@ const ClothingExplorer = () => {
             {items.map((item) => {
               const primaryImage =
                 item.images.find((img) => img.isPrimary) ?? item.images[0];
+              const imageSrc = primaryImage?.url ?? item.imageUrl ?? "";
+              const imageAlt = primaryImage?.altText ?? item.name;
 
               return (
                 <li
@@ -274,14 +277,20 @@ const ClothingExplorer = () => {
                   className="flex flex-col justify-between rounded-xl border border-gray-200 bg-white shadow-sm"
                 >
                   <div className="flex flex-col gap-3 p-4">
-                    <div className="relative overflow-hidden rounded-lg bg-gray-100">
-                      <div className="flex h-40 items-center justify-center text-sm text-gray-400">
-                        {primaryImage ? (
-                          <span>{primaryImage.altText ?? item.name}</span>
-                        ) : (
-                          <span>{item.name}</span>
-                        )}
-                      </div>
+                    <div className="relative h-40 overflow-hidden rounded-lg bg-gray-100">
+                      {imageSrc ? (
+                        <Image
+                          src={imageSrc}
+                          alt={imageAlt}
+                          fill
+                          sizes="(min-width: 1024px) 240px, (min-width: 768px) 33vw, 100vw"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-sm text-gray-400">
+                          {item.name}
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-col gap-1">
                       <h2 className="text-base font-semibold text-gray-900">
