@@ -30,9 +30,9 @@ Wardrobo explores an AI-assisted wardrobe experience where users can describe cl
    ```bash
    npx prisma migrate dev --name init
    ```
-5. (Optional) Seed the database once `prisma/seed.ts` contains data:
+5. (Optional) Seed the database once `prisma/seed.js` contains data:
    ```bash
-   npx prisma db seed
+   npm run prisma:seed
    ```
 6. Launch the Next.js dev server:
    ```bash
@@ -43,6 +43,7 @@ Wardrobo explores an AI-assisted wardrobe experience where users can describe cl
 ### Useful Commands
 - `docker compose logs -f postgres` – inspect database logs.
 - `npx prisma studio` – open Prisma Studio to inspect/edit data.
+- `npm run prisma:seed` – seed the database with dummy data.
 - `npm run lint` – run linting.
 
 ## Next Steps

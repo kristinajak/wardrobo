@@ -8,9 +8,66 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ClothingCategory {
+  TOP
+  BOTTOM
+  OUTERWEAR
+  FOOTWEAR
+  ACCESSORY
+  DRESS
+}
+
+enum ClothingSize {
+  XS
+  S
+  M
+  L
+  XL
+  XXL
+}
+
+model User {
+  id        Int             @id @default(autoincrement())
+  email     String          @unique
+  name      String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  items     ClothingItem[]
+}
+
 model ClothingItem {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int               @id @default(autoincrement())
+  name          String
+  category      ClothingCategory
+  description   String?
+  price         Decimal?          @db.Decimal(10, 2)
+  primaryColor  String?
+  colors        String[]
+  sizes         ClothingSize[]
+  materials     String[]
+  imageUrl      String?
+  brand         String?
+  fitNotes      String?
+  metadata      Json?
+  ownerId       Int?
+  owner         User?             @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  images        Image[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([category])
+  @@index([ownerId])
+}
+
+model Image {
+  id        Int           @id @default(autoincrement())
+  url       String
+  altText   String?
+  isPrimary Boolean       @default(false)
+  itemId    Int
+  item      ClothingItem  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([itemId])
 }
