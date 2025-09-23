@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <rect width="100%" height="100%" fill="#0b1020"/>
+  <!-- Fabric knit pattern -->
+  <defs>
+    <pattern id="knit" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M0 10 Q5 0 10 10 T20 10" fill="none" stroke="#1e3a8a" stroke-width="2"/>
+      <path d="M0 10 Q5 20 10 10 T20 10" fill="none" stroke="#3b82f6" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect x="40" y="40" width="320" height="220" rx="12" fill="url(#knit)"/>
+</svg>
+

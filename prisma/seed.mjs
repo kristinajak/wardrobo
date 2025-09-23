@@ -25,16 +25,16 @@ const clothingItems = [
     materials: ['organic cotton'],
     brand: 'Everyday Supply',
     fitNotes: 'Runs slightly oversized; size down for a slimmer silhouette.',
-    imageUrl: '/images/indigo-tee.jpg',
+    imageUrl: '/images/indigo-tee.svg',
     ownerEmail: 'alex@example.com',
     images: [
       {
-        url: '/images/indigo-tee.jpg',
+        url: '/images/indigo-tee.svg',
         altText: 'Indigo relaxed tee on hanger',
         isPrimary: true,
       },
       {
-        url: '/images/indigo-tee-detail.jpg',
+        url: '/images/indigo-tee-detail.svg',
         altText: 'Close up of indigo tee fabric',
       },
     ],
@@ -50,11 +50,11 @@ const clothingItems = [
     materials: ['linen'],
     brand: 'Seabreeze',
     fitNotes: 'True to size; pair with high-waisted bottoms.',
-    imageUrl: '/images/linen-shirt.jpg',
+    imageUrl: '/images/linen-shirt.svg',
     ownerEmail: 'alex@example.com',
     images: [
       {
-        url: '/images/linen-shirt.jpg',
+        url: '/images/linen-shirt.svg',
         altText: 'White cropped linen shirt on mannequin',
         isPrimary: true,
       },
@@ -71,11 +71,11 @@ const clothingItems = [
     materials: ['cotton', 'elastane'],
     brand: 'Harborline',
     fitNotes: 'Slim through the thigh with slight taper below the knee.',
-    imageUrl: '/images/coastal-chinos.jpg',
+    imageUrl: '/images/coastal-chinos.svg',
     ownerEmail: 'jordan@example.com',
     images: [
       {
-        url: '/images/coastal-chinos.jpg',
+        url: '/images/coastal-chinos.svg',
         altText: 'Khaki chinos folded on table',
         isPrimary: true,
       },
@@ -92,11 +92,11 @@ const clothingItems = [
     materials: ['polyester', 'nylon'],
     brand: 'North Grid',
     fitNotes: 'Athletic fit; designed to layer over light sweaters.',
-    imageUrl: '/images/skyline-tech-jacket.jpg',
+    imageUrl: '/images/skyline-tech-jacket.svg',
     ownerEmail: 'jordan@example.com',
     images: [
       {
-        url: '/images/skyline-tech-jacket.jpg',
+        url: '/images/skyline-tech-jacket.svg',
         altText: 'Gray technical jacket on model',
         isPrimary: true,
       },
@@ -113,11 +113,11 @@ const clothingItems = [
     materials: ['leather', 'rubber'],
     brand: 'SummitForge',
     fitNotes: 'Break-in required; comes with dual-density insoles.',
-    imageUrl: '/images/summit-trail-boots.jpg',
+    imageUrl: '/images/summit-trail-boots.svg',
     ownerEmail: 'alex@example.com',
     images: [
       {
-        url: '/images/summit-trail-boots.jpg',
+        url: '/images/summit-trail-boots.svg',
         altText: 'Brown hiking boots with rugged sole',
         isPrimary: true,
       },
@@ -134,11 +134,11 @@ const clothingItems = [
     materials: ['canvas', 'recycled polyester'],
     brand: 'CityThread',
     fitNotes: '15L capacity; fits up to a 15-inch laptop.',
-    imageUrl: '/images/urban-canvas-tote.jpg',
+    imageUrl: '/images/urban-canvas-tote.svg',
     ownerEmail: 'jordan@example.com',
     images: [
       {
-        url: '/images/urban-canvas-tote.jpg',
+        url: '/images/urban-canvas-tote.svg',
         altText: 'Black canvas tote bag hanging on chair',
         isPrimary: true,
       },

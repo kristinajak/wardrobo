@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <rect width="100%" height="100%" fill="#f8fafc"/>
+  <g transform="translate(70,30)" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2">
+    <!-- Shirt body -->
+    <path d="M60 40 L120 10 L180 40 L220 100 L220 220 L0 220 L0 100 Z"/>
+    <!-- Collar -->
+    <path d="M120 10 L150 40 L90 40 Z" fill="#d1d5db"/>
+    <!-- Placket -->
+    <rect x="115" y="40" width="10" height="180" fill="#d1d5db"/>
+    <!-- Buttons -->
+    <circle cx="120" cy="70" r="3" fill="#9ca3af"/>
+    <circle cx="120" cy="100" r="3" fill="#9ca3af"/>
+    <circle cx="120" cy="130" r="3" fill="#9ca3af"/>
+    <circle cx="120" cy="160" r="3" fill="#9ca3af"/>
+  </g>
+</svg>
+
