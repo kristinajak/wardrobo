@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+> Proposed Architecture
 
-## Getting Started
+  - Frontend SPA (React/Next.js) handles browsing, natural-language prompts, and upload UI; keeps state for filters/recommendations.
+  - Backend API (Node/Express or Next.js API routes) fronts all data access: CRUD for clothes, GPT orchestration, search requests.
+  - Primary datastore (Postgres + Prisma or MongoDB/Mongoose) holds canonical clothing records with structured fields and metadata (colors, tags, owner, upload paths).
+  - Search layer combines: traditional filtering (SQL/JSON queries on size/color) + vector similarity (open-source embeddings stored in pgvector/Weaviate) for fuzzy matching by description.
+  - AI service orchestrator calls OpenAI GPT: turns free-form user prompts into structured filters + semantic search queries, uses few-shot prompts, caches results, logs feedback.
 
-First, run the development server:
+  Data & Upload Flow
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+  - Start with seeded dummy data (DummyJSON or handcrafted fixtures) to validate UI/search; store in DB so migrating to real uploads is seamless.
+  - Add upload module early in design: image upload (S3/GCS bucket), metadata form, auto-tag pipeline; keep toggle to swap between dummy seeding and user uploads.
+  - Feature extraction pipeline: when new item stored, call Vision/CLIP model (OpenAI, Replicate, or local) → generate color/material tags → persist as structured metadata and optionally update vector index.
+  - Background job queue (BullMQ or Cloud Tasks) handles long-running AI tagging and reindexing to keep uploads snappy.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+  GPT Integration Strategy
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+  - Prompt template: “User request -> parse intent, extract filters (color, type, sleeve length), suggest synonyms.” Return JSON (e.g., {category, attributes, freeText}).
+  - Backend post-process: map structured fields to DB filter query; freeText chunk goes through embeddings search to capture style/fuzzy matches.
+  - Provide fallback logic: if GPT uncertain, degrade to keyword search or ask user clarifying questions.
+  - Log GPT inputs/outputs for debugging; keep prompt/response tokens capped via user guidance.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+  Later Enhancements
 
-## Learn More
+  - Personalization layer storing user fit/preferences; weight search scoring by user profile.
+  - Outfit builder (combine items) using rule engine + GPT suggestions.
+  - Feedback loop: thumbs up/down trains preference model; store in analytics DB (BigQuery/Snowflake) if needed.
+  - Admin dashboard for cleaning metadata, managing uploads, retrying failed AI tagging jobs.
 
-To learn more about Next.js, take a look at the following resources:
+  Suggestions
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+  1. Bootstrap DB schema now with both system-owned dummy entries and user-owned uploads so migration is smooth.
+  2. Prototype GPT prompt + deterministic tests first to ensure consistent JSON parse.
+  3. Choose vector store early (pgvector if already on Postgres) to avoid later migration pain.
+  4. Add feature-flag so you can ship dummy data mode while incrementally enabling uploads + auto-tagging.  
