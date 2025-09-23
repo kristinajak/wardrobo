@@ -1,35 +1,52 @@
-> Proposed Architecture
+# Wardrobo
 
-  - Frontend SPA (React/Next.js) handles browsing, natural-language prompts, and upload UI; keeps state for filters/recommendations.
-  - Backend API (Node/Express or Next.js API routes) fronts all data access: CRUD for clothes, GPT orchestration, search requests.
-  - Primary datastore (Postgres + Prisma or MongoDB/Mongoose) holds canonical clothing records with structured fields and metadata (colors, tags, owner, upload paths).
-  - Search layer combines: traditional filtering (SQL/JSON queries on size/color) + vector similarity (open-source embeddings stored in pgvector/Weaviate) for fuzzy matching by description.
-  - AI service orchestrator calls OpenAI GPT: turns free-form user prompts into structured filters + semantic search queries, uses few-shot prompts, caches results, logs feedback.
+Wardrobo explores an AI-assisted wardrobe experience where users can describe clothing in natural language and receive relevant suggestions. The project is built with Next.js, Tailwind CSS, TypeScript, Prisma, and PostgreSQL.
 
-  Data & Upload Flow
+## Architecture Snapshot
+- **Frontend (Next.js SPA)** handles browsing, natural-language prompts, upload UI, and local state for filters/recommendations.
+- **Backend API routes** expose CRUD for clothes, orchestrate GPT calls, and proxy all data access.
+- **Primary datastore (PostgreSQL + Prisma)** stores canonical clothing items with structured metadata (colors, tags, owner, upload paths).
+- **Search layer** combines standard filtering with future semantic search via embeddings (pgvector or external vector store).
+- **AI orchestration** converts free-form prompts into structured filters, performs semantic search, and logs feedback for iteration.
 
-  - Start with seeded dummy data (DummyJSON or handcrafted fixtures) to validate UI/search; store in DB so migrating to real uploads is seamless.
-  - Add upload module early in design: image upload (S3/GCS bucket), metadata form, auto-tag pipeline; keep toggle to swap between dummy seeding and user uploads.
-  - Feature extraction pipeline: when new item stored, call Vision/CLIP model (OpenAI, Replicate, or local) → generate color/material tags → persist as structured metadata and optionally update vector index.
-  - Background job queue (BullMQ or Cloud Tasks) handles long-running AI tagging and reindexing to keep uploads snappy.
+## Local Development
 
-  GPT Integration Strategy
+### Prerequisites
+- Node.js 18+
+- npm (bundled with Node) or pnpm/yarn
+- Docker Desktop (for the local PostgreSQL instance)
 
-  - Prompt template: “User request -> parse intent, extract filters (color, type, sleeve length), suggest synonyms.” Return JSON (e.g., {category, attributes, freeText}).
-  - Backend post-process: map structured fields to DB filter query; freeText chunk goes through embeddings search to capture style/fuzzy matches.
-  - Provide fallback logic: if GPT uncertain, degrade to keyword search or ask user clarifying questions.
-  - Log GPT inputs/outputs for debugging; keep prompt/response tokens capped via user guidance.
+### Setup
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Start the database (requires Docker):
+   ```bash
+   docker compose up -d
+   ```
+3. Copy `.env.example` to `.env` (ensure `DATABASE_URL` points at the local database, e.g. `postgresql://postgres:postgres@localhost:5432/wardrobo?schema=public`).
+4. Apply the initial Prisma migration:
+   ```bash
+   npx prisma migrate dev --name init
+   ```
+5. (Optional) Seed the database once `prisma/seed.ts` contains data:
+   ```bash
+   npx prisma db seed
+   ```
+6. Launch the Next.js dev server:
+   ```bash
+   npm run dev
+   ```
+7. Visit `http://localhost:3000`.
 
-  Later Enhancements
+### Useful Commands
+- `docker compose logs -f postgres` – inspect database logs.
+- `npx prisma studio` – open Prisma Studio to inspect/edit data.
+- `npm run lint` – run linting.
 
-  - Personalization layer storing user fit/preferences; weight search scoring by user profile.
-  - Outfit builder (combine items) using rule engine + GPT suggestions.
-  - Feedback loop: thumbs up/down trains preference model; store in analytics DB (BigQuery/Snowflake) if needed.
-  - Admin dashboard for cleaning metadata, managing uploads, retrying failed AI tagging jobs.
-
-  Suggestions
-
-  1. Bootstrap DB schema now with both system-owned dummy entries and user-owned uploads so migration is smooth.
-  2. Prototype GPT prompt + deterministic tests first to ensure consistent JSON parse.
-  3. Choose vector store early (pgvector if already on Postgres) to avoid later migration pain.
-  4. Add feature-flag so you can ship dummy data mode while incrementally enabling uploads + auto-tagging.  
+## Next Steps
+- Flesh out the `ClothingItem` model and seed script with realistic dummy data.
+- Add API routes for listing/filtering clothing items.
+- Prototype an OpenAI prompt to translate natural-language requests into structured filters.
+- Introduce embeddings + vector search once the core flow is stable.
