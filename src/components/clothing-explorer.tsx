@@ -106,6 +106,7 @@ export const ClothingExplorer = () => {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [useAi, setUseAi] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -114,10 +115,26 @@ export const ClothingExplorer = () => {
       setError(null);
 
       try {
-        const queryString = buildQuery(filters);
-        const response = await fetch(`/api/clothes?${queryString}`, {
-          signal: controller.signal,
-        });
+        let response: Response;
+        if (useAi && filters.search.trim()) {
+          response = await fetch(`/api/ai/query`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt: filters.search,
+              page: filters.page,
+              perPage: PAGE_SIZE,
+              category: filters.category || null,
+              color: filters.color || null,
+            }),
+            signal: controller.signal,
+          });
+        } else {
+          const queryString = buildQuery(filters);
+          response = await fetch(`/api/clothes?${queryString}`, {
+            signal: controller.signal,
+          });
+        }
 
         if (!response.ok) {
           throw new Error(`Request failed with status ${response.status}`);
@@ -140,7 +157,7 @@ export const ClothingExplorer = () => {
     run();
 
     return () => controller.abort();
-  }, [filters]);
+  }, [filters, useAi]);
 
   const primaryColors = useMemo(() => {
     return items.map((item) => item.primaryColor).filter(Boolean) as string[];
@@ -199,6 +216,15 @@ export const ClothingExplorer = () => {
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-inner focus:border-gray-500 focus:outline-none"
           />
         </div>
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={useAi}
+            onChange={(e) => setUseAi(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300"
+          />
+          Use AI
+        </label>
         <button
           type="submit"
           className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
