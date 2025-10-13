@@ -105,8 +105,6 @@ const clothingItems = [
 ];
 
 async function main() {
-  console.log("🌱 Seeding Wardrobo data...");
-
   await prisma.$transaction([
     prisma.image.deleteMany(),
     prisma.clothingItem.deleteMany(),
