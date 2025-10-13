@@ -1,6 +1,8 @@
 import { PrismaClient, Prisma } from "../src/generated/prisma/index.js";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: { db: { url: process.env.DATABASE_URL } },
+});
 
 const users = [
   {
@@ -30,7 +32,7 @@ const clothingItems = [
     ownerEmail: "alex@example.com",
     images: [
       {
-        url: "/images/indigo-tee.svg",
+        url: "/images/indigo-tee.jpg",
         altText: "Indigo relaxed tee on hanger",
         isPrimary: true,
       },
@@ -47,7 +49,7 @@ const clothingItems = [
     materials: ["linen"],
     brand: "Seabreeze",
     fitNotes: "True to size; pair with high-waisted bottoms.",
-    imageUrl: "/images/linen-shirt.svg",
+    imageUrl: "/images/linen-shirt.jpg",
     ownerEmail: "alex@example.com",
     images: [
       {
@@ -69,11 +71,11 @@ const clothingItems = [
     materials: ["cotton", "elastane"],
     brand: "Harborline",
     fitNotes: "Slim through the thigh with slight taper below the knee.",
-    imageUrl: "/images/coastal-chinos.jpeg",
+    imageUrl: "/images/coastal-chinos.jpg",
     ownerEmail: "jordan@example.com",
     images: [
       {
-        url: "/images/coastal-chinos.svg",
+        url: "/images/coastal-chinos.jpg",
         altText: "Khaki chinos folded on table",
         isPrimary: true,
       },
@@ -94,51 +96,8 @@ const clothingItems = [
     ownerEmail: "jordan@example.com",
     images: [
       {
-        url: "/images/skyline-tech-jacket.svg",
+        url: "/images/skyline-tech-jacket.jpg",
         altText: "Gray technical jacket on model",
-        isPrimary: true,
-      },
-    ],
-  },
-  {
-    name: "Summit Trail Boots",
-    category: "FOOTWEAR",
-    description: "Waterproof leather hiking boots with Vibram outsole.",
-    price: 160.0,
-    primaryColor: "brown",
-    colors: ["brown", "olive"],
-    sizes: ["M", "L"],
-    materials: ["leather", "rubber"],
-    brand: "SummitForge",
-    fitNotes: "Break-in required; comes with dual-density insoles.",
-    imageUrl: "/images/summit-trail-boots.svg",
-    ownerEmail: "alex@example.com",
-    images: [
-      {
-        url: "/images/summit-trail-boots.svg",
-        altText: "Brown hiking boots with rugged sole",
-        isPrimary: true,
-      },
-    ],
-  },
-  {
-    name: "Urban Canvas Tote",
-    category: "ACCESSORY",
-    description:
-      "Durable canvas tote with interior laptop sleeve and zip pocket.",
-    price: 48.0,
-    primaryColor: "black",
-    colors: ["black", "olive"],
-    sizes: [],
-    materials: ["canvas", "recycled polyester"],
-    brand: "CityThread",
-    fitNotes: "15L capacity; fits up to a 15-inch laptop.",
-    imageUrl: "/images/urban-canvas-tote.svg",
-    ownerEmail: "jordan@example.com",
-    images: [
-      {
-        url: "/images/urban-canvas-tote.svg",
-        altText: "Black canvas tote bag hanging on chair",
         isPrimary: true,
       },
     ],
