@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
 import { prisma } from "@/lib/prisma";
-import { ClothingCategory } from "@/generated/prisma";
-import type { Prisma } from "@/generated/prisma";
+import { ClothingCategory } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { put } from "@vercel/blob";
 
 export const runtime = "nodejs";

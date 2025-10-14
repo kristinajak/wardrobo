@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ClothingCategory } from "@/generated/prisma";
-import type { Prisma } from "@/generated/prisma";
+import { ClothingCategory } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 const DEFAULT_PAGE_SIZE = 12;
 
