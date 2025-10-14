@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
 
 const DEFAULT_PAGE_SIZE = 12;
+export const runtime = "nodejs";
 
 type AiExtraction = {
   category?: string | null;
@@ -95,13 +95,11 @@ export async function POST(request: NextRequest) {
     prompt,
     page: pageRaw,
     perPage: perPageRaw,
-    category: seedCategory,
     color: seedColor,
   } = (await request.json().catch(() => ({}))) as {
     prompt?: string;
     page?: number;
     perPage?: number;
-    category?: string | null;
     color?: string | null;
   };
 
@@ -123,8 +121,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const where: Prisma.ClothingItemWhereInput = {};
-  const andConditions: Prisma.ClothingItemWhereInput[] = [];
+  type Where = Record<string, unknown> & {
+    AND?: Array<Record<string, unknown>>;
+  };
+  const where: Where = {};
+  const andConditions: Array<Record<string, unknown>> = [];
 
   const rawColor = (seedColor ?? extracted.color ?? "").toString();
   const colorCandidate = rawColor ? rawColor.toLowerCase() : "";
@@ -140,7 +141,7 @@ export async function POST(request: NextRequest) {
   const searchQuery = (extracted.search ?? "").toString().trim();
   const hasColorFilter = Boolean(colorCandidate);
   if (searchQuery && !hasColorFilter) {
-    const orClauses: Prisma.ClothingItemWhereInput[] = [
+    const orClauses: Array<Record<string, unknown>> = [
       { name: { contains: searchQuery, mode: "insensitive" } },
       { description: { contains: searchQuery, mode: "insensitive" } },
       { brand: { contains: searchQuery, mode: "insensitive" } },
@@ -204,11 +205,7 @@ export async function POST(request: NextRequest) {
       ...(gte !== undefined ? { gte } : {}),
       ...(lte !== undefined ? { lte } : {}),
     };
-    andConditions.push({
-      price: priceFilter as unknown as NonNullable<
-        Prisma.ClothingItemWhereInput["price"]
-      >,
-    });
+    andConditions.push({ price: priceFilter });
   }
 
   if (andConditions.length > 0) {
