@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
 import { prisma } from "@/lib/prisma";
-import { ClothingCategory } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 import { put } from "@vercel/blob";
 
@@ -20,12 +19,25 @@ type VisionExtraction = {
   closure?: string | null;
 };
 
+const ALLOWED_CATEGORIES = [
+  "TOP",
+  "BOTTOM",
+  "OUTERWEAR",
+  "FOOTWEAR",
+  "ACCESSORY",
+  "DRESS",
+] as const;
+
+type CategoryValue = (typeof ALLOWED_CATEGORIES)[number];
+
 function normalizeCategory(
   value: string | null | undefined
-): ClothingCategory | null {
+): CategoryValue | null {
   if (!value) return null;
   const upper = value.toUpperCase();
-  return (ClothingCategory as Record<string, ClothingCategory>)[upper] ?? null;
+  return (ALLOWED_CATEGORIES as readonly string[]).includes(upper)
+    ? (upper as CategoryValue)
+    : null;
 }
 
 function normalizeColors(values: unknown): string[] {
@@ -240,7 +252,7 @@ export async function POST(request: NextRequest) {
   }
 
   const inferredCategory =
-    normalizeCategory(vision.category) ?? ClothingCategory.TOP;
+    normalizeCategory(vision.category) ?? ("TOP" as CategoryValue);
   const inferredPrimaryColor =
     (vision.primaryColor || "").trim().toLowerCase() || null;
   const inferredColors = normalizeColors(vision.colors);

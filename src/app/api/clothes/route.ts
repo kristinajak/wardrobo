@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ClothingCategory } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 
 const DEFAULT_PAGE_SIZE = 12;
+const ALLOWED_CATEGORIES = [
+  "TOP",
+  "BOTTOM",
+  "OUTERWEAR",
+  "FOOTWEAR",
+  "ACCESSORY",
+  "DRESS",
+] as const;
 
-type CategoryValue = (typeof ClothingCategory)[keyof typeof ClothingCategory];
+type CategoryValue = (typeof ALLOWED_CATEGORIES)[number];
 
 function parseNumber(value: string | null, fallback: number): number {
   if (!value) return fallback;
@@ -27,7 +34,7 @@ export async function GET(request: NextRequest) {
 
   if (category) {
     const normalizedCategory = category.toUpperCase();
-    const validCategories = Object.values(ClothingCategory);
+    const validCategories = [...ALLOWED_CATEGORIES];
 
     if ((validCategories as string[]).includes(normalizedCategory)) {
       where.category = normalizedCategory as CategoryValue;

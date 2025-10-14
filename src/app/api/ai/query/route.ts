@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ClothingCategory } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 
 const DEFAULT_PAGE_SIZE = 12;
-
-type CategoryValue = (typeof ClothingCategory)[keyof typeof ClothingCategory];
 
 type AiExtraction = {
   category?: string | null;
@@ -129,17 +126,8 @@ export async function POST(request: NextRequest) {
   const where: Prisma.ClothingItemWhereInput = {};
   const andConditions: Prisma.ClothingItemWhereInput[] = [];
 
-  const validCategories = Object.values(ClothingCategory) as string[];
-  const categoryCandidate = (seedCategory ?? extracted.category ?? "")
-    .toString()
-    .toUpperCase();
-  if (validCategories.includes(categoryCandidate)) {
-    where.category = categoryCandidate as CategoryValue;
-  }
-
-  const colorCandidate = (seedColor ?? extracted.color ?? "")
-    .toString()
-    .toLowerCase();
+  const rawColor = (seedColor ?? extracted.color ?? "").toString();
+  const colorCandidate = rawColor ? rawColor.toLowerCase() : "";
   if (colorCandidate) {
     andConditions.push({
       OR: [
@@ -182,11 +170,8 @@ export async function POST(request: NextRequest) {
       orClauses.push({ materials: { has: "sleeve:sleeveless" } });
 
     // type mappings
-    if (q.includes("t-shirt") || q.includes("tshirt") || q.includes("tee")) {
+    if (q.includes("t-shirt") || q.includes("tshirt") || q.includes("tee"))
       orClauses.push({ materials: { has: "type:tshirt" } });
-      // Fallback to category for older items without vision type tokens
-      orClauses.push({ category: ClothingCategory.TOP as CategoryValue });
-    }
     if (q.includes("shirt"))
       orClauses.push({ materials: { has: "type:shirt" } });
     if (q.includes("jeans"))
