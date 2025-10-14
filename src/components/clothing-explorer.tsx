@@ -136,44 +136,69 @@ export const ClothingExplorer = () => {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-10">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-10">
       <header className="flex flex-col gap-4">
-        <h1 className="text-3xl font-semibold tracking-tight">Wardrobo</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
+            Wardrobo
+          </h1>
+        </div>
         <p className="text-base text-gray-600">
-          Search in natural language (e.g. &ldquo;red striped t-shirt&quot; or
-          &ldquo;black jeans with white flowers&quot;). <br></br>Upload your own
-          photos and AI will auto‑tag colors, patterns, and type.
+          Search in natural language (e.g. &ldquo;red striped t-shirt&rdquo; or
+          &ldquo;black jeans with white flowers&rdquo;). Upload your own photos
+          and AI will auto-tag colors, patterns, and type.
         </p>
       </header>
 
-      <form
-        onSubmit={handleSearchSubmit}
-        className="flex flex-col gap-4 rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm sm:flex-row sm:items-center"
-      >
-        <div className="flex-1">
-          <label htmlFor="search" className="sr-only">
-            Search wardrobe
-          </label>
+      <form onSubmit={handleSearchSubmit} className="w-full">
+        <label htmlFor="search" className="sr-only">
+          Search wardrobe
+        </label>
+        <div className="relative">
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-5 w-5"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10.5 3.75a6.75 6.75 0 1 0 4.243 11.964l3.771 3.772a.75.75 0 1 0 1.06-1.06l-3.772-3.772A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </span>
           <input
             id="search"
             name="search"
             defaultValue={filters.search}
             placeholder='Search for "blue short sleeve tee"'
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-inner focus:border-gray-500 focus:outline-none"
+            className="h-14 w-full rounded-2xl border border-gray-300 bg-white pl-12 pr-12 text-base shadow-sm outline-none transition focus:border-gray-500"
           />
         </div>
-        <button
-          type="submit"
-          className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
-        >
-          Search
-        </button>
       </form>
 
-      <section className="rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm">
-        <h2 className="mb-3 text-sm font-semibold text-gray-800">
-          Upload new item
-        </h2>
+      <section className="rounded-2xl border border-gray-200/60 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex flex-col items-center gap-2 text-center">
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+            {/* cloud upload icon */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-6 w-6"
+            >
+              <path d="M9 12.75a.75.75 0 0 0 1.5 0V9.56l.72.72a.75.75 0 1 0 1.06-1.06l-2.25-2.25a.75.75 0 0 0-1.06 0L6.72 9.22a.75.75 0 1 0 1.06 1.06l.72-.72v3.19Z" />
+              <path
+                fillRule="evenodd"
+                d="M7.5 19.5A4.5 4.5 0 0 1 3 15c0-2.1 1.44-3.87 3.39-4.36a6 6 0 0 1 11.7-.64A4.5 4.5 0 1 1 18 19.5H7.5Z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </span>
+          <h2 className="text-lg font-medium text-gray-800">Upload new item</h2>
+        </div>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -199,42 +224,29 @@ export const ClothingExplorer = () => {
               setIsUploading(false);
             }
           }}
-          className="grid gap-3 sm:grid-cols-2"
+          className="grid gap-4"
         >
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
-              Name
-            </span>
-            <input
-              name="name"
-              placeholder="Item name"
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
-            />
-          </label>
-          <label className="sm:col-span-2 flex flex-col gap-1 text-sm">
-            <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
-              Image file
-            </span>
-            <input
-              name="file"
-              type="file"
-              accept="image/*"
-              required
-              className="text-sm"
-            />
-          </label>
-          <div className="sm:col-span-2">
-            <button
-              type="submit"
-              disabled={isUploading}
-              className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {isUploading ? "Uploading..." : "Upload item"}
-            </button>
-          </div>
+          <input
+            name="name"
+            placeholder="Item name"
+            className="h-12 rounded-xl border border-gray-300 px-4 text-sm outline-none transition focus:border-gray-500"
+          />
+          <input
+            name="file"
+            type="file"
+            accept="image/*"
+            required
+            className="text-sm"
+          />
+          <button
+            type="submit"
+            disabled={isUploading}
+            className="h-12 rounded-xl bg-p1 text-sm font-medium text-white transition hover:bg-p2 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {isUploading ? "Uploading..." : "Upload item"}
+          </button>
         </form>
       </section>
-      {/* Removed manual filters; AI-only search */}
 
       <section>
         {isLoading ? (
@@ -256,14 +268,18 @@ export const ClothingExplorer = () => {
                 item.images.find((img) => img.isPrimary) ?? item.images[0];
               const imageSrc = primaryImage?.url ?? item.imageUrl ?? "";
               const imageAlt = primaryImage?.altText ?? item.name;
+              const tagChips = [
+                ...(Array.isArray(item.colors) ? item.colors : []),
+                item.category,
+              ].filter(Boolean) as string[];
 
               return (
                 <li
                   key={item.id}
-                  className="rounded-xl border border-gray-200 bg-white shadow-sm"
+                  className="rounded-2xl border border-gray-200 bg-white shadow-sm"
                 >
                   <div className="flex flex-col gap-2 p-3">
-                    <div className="relative h-48 overflow-hidden rounded-lg bg-gray-100">
+                    <div className="relative h-48 overflow-hidden rounded-xl bg-gray-100">
                       {imageSrc ? (
                         <Image
                           src={imageSrc}
@@ -281,6 +297,18 @@ export const ClothingExplorer = () => {
                     <h2 className="truncate text-sm font-medium text-gray-900">
                       {item.name}
                     </h2>
+                    {tagChips.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-2">
+                        {tagChips.map((chip, idx) => (
+                          <span
+                            key={`${chip}-${idx}`}
+                            className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700"
+                          >
+                            {chip}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </li>
               );
