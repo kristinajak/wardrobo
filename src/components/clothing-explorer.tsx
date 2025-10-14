@@ -3,6 +3,7 @@
 import Image from "next/image";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
+import UploadDropzone from "@/components/upload-dropzone";
 
 const PAGE_SIZE = 12;
 
@@ -56,6 +57,7 @@ export const ClothingExplorer = () => {
   const [error, setError] = useState<string | null>(null);
   // AI is used when a prompt is provided; empty prompt loads all items
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -180,30 +182,19 @@ export const ClothingExplorer = () => {
       </form>
 
       <section className="rounded-2xl border border-gray-200/60 bg-white p-6 shadow-sm">
-        <div className="mb-4 flex flex-col items-center gap-2 text-center">
-          <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-500">
-            {/* cloud upload icon */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="h-6 w-6"
-            >
-              <path d="M9 12.75a.75.75 0 0 0 1.5 0V9.56l.72.72a.75.75 0 1 0 1.06-1.06l-2.25-2.25a.75.75 0 0 0-1.06 0L6.72 9.22a.75.75 0 1 0 1.06 1.06l.72-.72v3.19Z" />
-              <path
-                fillRule="evenodd"
-                d="M7.5 19.5A4.5 4.5 0 0 1 3 15c0-2.1 1.44-3.87 3.39-4.36a6 6 0 0 1 11.7-.64A4.5 4.5 0 1 1 18 19.5H7.5Z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </span>
-          <h2 className="text-lg font-medium text-gray-800">Upload new item</h2>
-        </div>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
             const form = e.currentTarget as HTMLFormElement;
-            const data = new FormData(form);
+            const formDataFromForm = new FormData(form);
+            const name = String(formDataFromForm.get("name") || "").trim();
+            if (!selectedFile) {
+              setError("Please select an image to upload.");
+              return;
+            }
+            const data = new FormData();
+            if (name) data.append("name", name);
+            data.append("file", selectedFile);
             setIsUploading(true);
             setError(null);
             try {
@@ -218,6 +209,7 @@ export const ClothingExplorer = () => {
               // refresh list
               setFilters((current) => ({ ...current }));
               form.reset();
+              setSelectedFile(null);
             } catch (err) {
               setError((err as Error).message);
             } finally {
@@ -231,12 +223,9 @@ export const ClothingExplorer = () => {
             placeholder="Item name"
             className="h-12 rounded-xl border border-gray-300 px-4 text-sm outline-none transition focus:border-gray-500"
           />
-          <input
-            name="file"
-            type="file"
-            accept="image/*"
-            required
-            className="text-sm"
+          <UploadDropzone
+            selectedFile={selectedFile}
+            onFileSelected={setSelectedFile}
           />
           <button
             type="submit"
