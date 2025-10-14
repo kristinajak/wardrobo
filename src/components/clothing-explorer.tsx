@@ -2,28 +2,7 @@
 
 import Image from "next/image";
 import type { FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
-
-const CATEGORY_OPTIONS = [
-  { label: "All categories", value: "" },
-  { label: "Tops", value: "TOP" },
-  { label: "Bottoms", value: "BOTTOM" },
-  { label: "Outerwear", value: "OUTERWEAR" },
-  { label: "Footwear", value: "FOOTWEAR" },
-  { label: "Accessories", value: "ACCESSORY" },
-  { label: "Dresses", value: "DRESS" },
-];
-
-const COLOR_OPTIONS = [
-  { label: "Any color", value: "" },
-  { label: "Blue", value: "blue" },
-  { label: "White", value: "white" },
-  { label: "Khaki", value: "khaki" },
-  { label: "Gray", value: "gray" },
-  { label: "Brown", value: "brown" },
-  { label: "Black", value: "black" },
-  { label: "Olive", value: "olive" },
-];
+import { useEffect, useState } from "react";
 
 const PAGE_SIZE = 12;
 
@@ -32,12 +11,6 @@ type ClothingImage = {
   url: string;
   altText?: string | null;
   isPrimary: boolean;
-};
-
-type ClothingOwner = {
-  id: number;
-  name?: string | null;
-  email: string;
 };
 
 type ClothingItem = {
@@ -53,7 +26,6 @@ type ClothingItem = {
   colors: string[];
   sizes: string[];
   images: ClothingImage[];
-  owner?: ClothingOwner | null;
 };
 
 type ApiResponse = {
@@ -68,36 +40,12 @@ type ApiResponse = {
 
 type Filters = {
   search: string;
-  category: string;
-  color: string;
   page: number;
 };
-
-function buildQuery(params: Filters) {
-  const query = new URLSearchParams();
-  query.set("page", String(params.page));
-  query.set("perPage", String(PAGE_SIZE));
-
-  if (params.search.trim()) {
-    query.set("q", params.search.trim());
-  }
-
-  if (params.category) {
-    query.set("category", params.category);
-  }
-
-  if (params.color) {
-    query.set("color", params.color);
-  }
-
-  return query.toString();
-}
 
 export const ClothingExplorer = () => {
   const [filters, setFilters] = useState<Filters>({
     search: "",
-    category: "",
-    color: "",
     page: 1,
   });
 
@@ -106,7 +54,8 @@ export const ClothingExplorer = () => {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [useAi, setUseAi] = useState(false);
+  // AI is used when a prompt is provided; empty prompt loads all items
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -115,26 +64,34 @@ export const ClothingExplorer = () => {
       setError(null);
 
       try {
-        let response: Response;
-        if (useAi && filters.search.trim()) {
-          response = await fetch(`/api/ai/query`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              prompt: filters.search,
-              page: filters.page,
-              perPage: PAGE_SIZE,
-              category: filters.category || null,
-              color: filters.color || null,
-            }),
+        if (!filters.search.trim()) {
+          const qs = new URLSearchParams({
+            page: String(filters.page),
+            perPage: String(PAGE_SIZE),
+          });
+          const response = await fetch(`/api/clothes?${qs.toString()}`, {
             signal: controller.signal,
           });
-        } else {
-          const queryString = buildQuery(filters);
-          response = await fetch(`/api/clothes?${queryString}`, {
-            signal: controller.signal,
-          });
+          if (!response.ok) {
+            throw new Error(`Request failed with status ${response.status}`);
+          }
+          const payload: ApiResponse = await response.json();
+          setItems(payload.data);
+          setTotalPages(payload.meta.totalPages);
+          setTotal(payload.meta.total);
+          return;
         }
+
+        const response = await fetch(`/api/ai/query`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: filters.search,
+            page: filters.page,
+            perPage: PAGE_SIZE,
+          }),
+          signal: controller.signal,
+        });
 
         if (!response.ok) {
           throw new Error(`Request failed with status ${response.status}`);
@@ -157,11 +114,7 @@ export const ClothingExplorer = () => {
     run();
 
     return () => controller.abort();
-  }, [filters, useAi]);
-
-  const primaryColors = useMemo(() => {
-    return items.map((item) => item.primaryColor).filter(Boolean) as string[];
-  }, [items]);
+  }, [filters]);
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -171,14 +124,6 @@ export const ClothingExplorer = () => {
     setFilters((current) => ({
       ...current,
       search: searchValue,
-      page: 1,
-    }));
-  };
-
-  const handleFilterChange = (key: "category" | "color", value: string) => {
-    setFilters((current) => ({
-      ...current,
-      [key]: value,
       page: 1,
     }));
   };
@@ -195,8 +140,9 @@ export const ClothingExplorer = () => {
       <header className="flex flex-col gap-4">
         <h1 className="text-3xl font-semibold tracking-tight">Wardrobo</h1>
         <p className="text-base text-gray-600">
-          Describe what you want or browse curated pieces seeded from our demo
-          wardrobe.
+          Search in natural language (e.g. &ldquo;red striped t-shirt&quot; or
+          &ldquo;black jeans with white flowers&quot;). <br></br>Upload your own
+          photos and AI will auto‑tag colors, patterns, and type.
         </p>
       </header>
 
@@ -216,15 +162,6 @@ export const ClothingExplorer = () => {
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-inner focus:border-gray-500 focus:outline-none"
           />
         </div>
-        <label className="flex items-center gap-2 text-sm text-gray-700">
-          <input
-            type="checkbox"
-            checked={useAi}
-            onChange={(e) => setUseAi(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300"
-          />
-          Use AI
-        </label>
         <button
           type="submit"
           className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
@@ -233,48 +170,71 @@ export const ClothingExplorer = () => {
         </button>
       </form>
 
-      <section className="grid gap-4 sm:grid-cols-3">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
-            Category
-          </span>
-          <select
-            value={filters.category}
-            onChange={(event) =>
-              handleFilterChange("category", event.target.value)
+      <section className="rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm">
+        <h2 className="mb-3 text-sm font-semibold text-gray-800">
+          Upload new item
+        </h2>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const form = e.currentTarget as HTMLFormElement;
+            const data = new FormData(form);
+            setIsUploading(true);
+            setError(null);
+            try {
+              const resp = await fetch("/api/upload", {
+                method: "POST",
+                body: data,
+              });
+              if (!resp.ok) {
+                const text = await resp.text();
+                throw new Error(`Upload failed: ${resp.status} ${text}`);
+              }
+              // refresh list
+              setFilters((current) => ({ ...current }));
+              form.reset();
+            } catch (err) {
+              setError((err as Error).message);
+            } finally {
+              setIsUploading(false);
             }
-            className="rounded-md border border-gray-300 px-2 py-2 text-sm focus:border-gray-500 focus:outline-none"
-          >
-            {CATEGORY_OPTIONS.map((option) => (
-              <option key={option.value || "all"} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
-            Primary color
-          </span>
-          <select
-            value={filters.color}
-            onChange={(event) =>
-              handleFilterChange("color", event.target.value)
-            }
-            className="rounded-md border border-gray-300 px-2 py-2 text-sm focus:border-gray-500 focus:outline-none"
-          >
-            {COLOR_OPTIONS.map((option) => (
-              <option key={option.value || "any"} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="hidden flex-col justify-center rounded-md border border-dashed border-gray-300 px-3 py-2 text-xs text-gray-500 sm:flex">
-          <span className="font-medium">Current palette</span>
-          <span className="truncate">{primaryColors.join(", ") || "-"}</span>
-        </div>
+          }}
+          className="grid gap-3 sm:grid-cols-2"
+        >
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              Name
+            </span>
+            <input
+              name="name"
+              placeholder="Item name"
+              className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
+            />
+          </label>
+          <label className="sm:col-span-2 flex flex-col gap-1 text-sm">
+            <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              Image file
+            </span>
+            <input
+              name="file"
+              type="file"
+              accept="image/*"
+              required
+              className="text-sm"
+            />
+          </label>
+          <div className="sm:col-span-2">
+            <button
+              type="submit"
+              disabled={isUploading}
+              className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {isUploading ? "Uploading..." : "Upload item"}
+            </button>
+          </div>
+        </form>
       </section>
+      {/* Removed manual filters; AI-only search */}
 
       <section>
         {isLoading ? (
@@ -300,10 +260,10 @@ export const ClothingExplorer = () => {
               return (
                 <li
                   key={item.id}
-                  className="flex flex-col justify-between rounded-xl border border-gray-200 bg-white shadow-sm"
+                  className="rounded-xl border border-gray-200 bg-white shadow-sm"
                 >
-                  <div className="flex flex-col gap-3 p-4">
-                    <div className="relative h-40 overflow-hidden rounded-lg bg-gray-100">
+                  <div className="flex flex-col gap-2 p-3">
+                    <div className="relative h-48 overflow-hidden rounded-lg bg-gray-100">
                       {imageSrc ? (
                         <Image
                           src={imageSrc}
@@ -318,32 +278,9 @@ export const ClothingExplorer = () => {
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <h2 className="text-base font-semibold text-gray-900">
-                        {item.name}
-                      </h2>
-                      <p className="text-sm text-gray-500">
-                        {item.brand ?? "Independent label"}
-                      </p>
-                      {item.price ? (
-                        <p className="text-sm font-medium text-gray-900">
-                          ${Number(item.price).toFixed(2)}
-                        </p>
-                      ) : null}
-                      <p className="text-xs uppercase tracking-wide text-gray-400">
-                        {item.category}
-                      </p>
-                    </div>
-                    {item.description ? (
-                      <p className="text-sm text-gray-600">
-                        {item.description}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div className="border-t border-gray-100 px-4 py-3 text-xs text-gray-500">
-                    {item.owner
-                      ? `Curated by ${item.owner.name ?? item.owner.email}`
-                      : "Wardrobo collection"}
+                    <h2 className="truncate text-sm font-medium text-gray-900">
+                      {item.name}
+                    </h2>
                   </div>
                 </li>
               );

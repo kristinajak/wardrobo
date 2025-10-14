@@ -26,15 +26,6 @@ enum ClothingSize {
   XXL
 }
 
-model User {
-  id        Int             @id @default(autoincrement())
-  email     String          @unique
-  name      String?
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
-  items     ClothingItem[]
-}
-
 model ClothingItem {
   id            Int               @id @default(autoincrement())
   name          String
@@ -49,14 +40,11 @@ model ClothingItem {
   brand         String?
   fitNotes      String?
   metadata      Json?
-  ownerId       Int?
-  owner         User?             @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   images        Image[]
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
   @@index([category])
-  @@index([ownerId])
 }
 
 model Image {

@@ -6,11 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint",
-    "prisma:seed": "node prisma/seed.mjs"
+    "lint": "eslint"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
+    "@vercel/blob": "^2.0.0",
     "next": "15.5.3",
     "react": "19.1.0",
     "react-dom": "19.1.0"

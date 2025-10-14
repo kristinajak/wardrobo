@@ -7,12 +7,6 @@ const DEFAULT_PAGE_SIZE = 12;
 
 type CategoryValue = (typeof ClothingCategory)[keyof typeof ClothingCategory];
 
-function parseNumber(value: string | null, fallback: number): number {
-  if (!value) return fallback;
-  const asNumber = Number.parseInt(value, 10);
-  return Number.isNaN(asNumber) || asNumber <= 0 ? fallback : asNumber;
-}
-
 type AiExtraction = {
   category?: string | null;
   color?: string | null;
@@ -156,14 +150,55 @@ export async function POST(request: NextRequest) {
   }
 
   const searchQuery = (extracted.search ?? "").toString().trim();
-  if (searchQuery) {
-    andConditions.push({
-      OR: [
-        { name: { contains: searchQuery, mode: "insensitive" } },
-        { description: { contains: searchQuery, mode: "insensitive" } },
-        { brand: { contains: searchQuery, mode: "insensitive" } },
-      ],
-    });
+  const hasColorFilter = Boolean(colorCandidate);
+  if (searchQuery && !hasColorFilter) {
+    const orClauses: Prisma.ClothingItemWhereInput[] = [
+      { name: { contains: searchQuery, mode: "insensitive" } },
+      { description: { contains: searchQuery, mode: "insensitive" } },
+      { brand: { contains: searchQuery, mode: "insensitive" } },
+    ];
+    const q = searchQuery.toLowerCase();
+    // pattern mappings
+    if (q.includes("stripe"))
+      orClauses.push({ materials: { has: "pattern:striped" } });
+    if (q.includes("polka") || q.includes("dotted") || q.includes("dot"))
+      orClauses.push({ materials: { has: "pattern:dotted" } });
+    if (q.includes("floral") || q.includes("flower"))
+      orClauses.push({ materials: { has: "pattern:floral" } });
+
+    // closure and hood
+    if (q.includes("zip"))
+      orClauses.push({ materials: { has: "closure:zipper" } });
+    if (q.includes("button"))
+      orClauses.push({ materials: { has: "closure:buttons" } });
+    if (q.includes("hood")) orClauses.push({ materials: { has: "hood" } });
+
+    // sleeve
+    if (q.includes("short sleeve"))
+      orClauses.push({ materials: { has: "sleeve:short" } });
+    if (q.includes("long sleeve"))
+      orClauses.push({ materials: { has: "sleeve:long" } });
+    if (q.includes("sleeveless"))
+      orClauses.push({ materials: { has: "sleeve:sleeveless" } });
+
+    // type mappings
+    if (q.includes("t-shirt") || q.includes("tshirt") || q.includes("tee")) {
+      orClauses.push({ materials: { has: "type:tshirt" } });
+      // Fallback to category for older items without vision type tokens
+      orClauses.push({ category: ClothingCategory.TOP as CategoryValue });
+    }
+    if (q.includes("shirt"))
+      orClauses.push({ materials: { has: "type:shirt" } });
+    if (q.includes("jeans"))
+      orClauses.push({ materials: { has: "type:jeans" } });
+    if (q.includes("jacket"))
+      orClauses.push({ materials: { has: "type:jacket" } });
+    if (q.includes("dress"))
+      orClauses.push({ materials: { has: "type:dress" } });
+    if (q.includes("skirt"))
+      orClauses.push({ materials: { has: "type:skirt" } });
+
+    andConditions.push({ OR: orClauses });
   }
 
   if (extracted.brand) {
@@ -202,7 +237,6 @@ export async function POST(request: NextRequest) {
       where,
       include: {
         images: { orderBy: { isPrimary: "desc" } },
-        owner: { select: { id: true, name: true, email: true } },
       },
       orderBy: { createdAt: "desc" },
       skip,

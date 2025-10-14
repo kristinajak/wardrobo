@@ -33,15 +33,11 @@ Wardrobo explores an AI-assisted wardrobe experience where users can describe cl
    ```bash
    npx prisma migrate dev --name init
    ```
-5. (Optional) Seed the database once `prisma/seed.js` contains data:
-   ```bash
-   npm run prisma:seed
-   ```
-6. Launch the Next.js dev server:
+5. Launch the Next.js dev server:
    ```bash
    npm run dev
    ```
-7. Visit `http://localhost:3000`.
+6. Visit `http://localhost:3000`.
 
 ### AI Query Endpoint
 
@@ -54,12 +50,10 @@ Wardrobo explores an AI-assisted wardrobe experience where users can describe cl
 
 - `docker compose logs -f postgres` – inspect database logs.
 - `npx prisma studio` – open Prisma Studio to inspect/edit data.
-- `npm run prisma:seed` – seed the database with dummy data.
 - `npm run lint` – run linting.
 
 ## Next Steps
 
-- Flesh out the `ClothingItem` model and seed script with realistic dummy data.
 - Add API routes for listing/filtering clothing items.
 - Prototype an OpenAI prompt to translate natural-language requests into structured filters.
 - Introduce embeddings + vector search once the core flow is stable.

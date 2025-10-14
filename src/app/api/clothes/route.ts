@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { ClothingCategory } from '@/generated/prisma';
-import type { Prisma } from '@/generated/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { ClothingCategory } from "@/generated/prisma";
+import type { Prisma } from "@/generated/prisma";
 
 const DEFAULT_PAGE_SIZE = 12;
 
@@ -16,11 +16,11 @@ function parseNumber(value: string | null, fallback: number): number {
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
-  const page = parseNumber(searchParams.get('page'), 1);
-  const pageSize = parseNumber(searchParams.get('perPage'), DEFAULT_PAGE_SIZE);
-  const category = searchParams.get('category');
-  const color = searchParams.get('color');
-  const search = searchParams.get('search') ?? searchParams.get('q');
+  const page = parseNumber(searchParams.get("page"), 1);
+  const pageSize = parseNumber(searchParams.get("perPage"), DEFAULT_PAGE_SIZE);
+  const category = searchParams.get("category");
+  const color = searchParams.get("color");
+  const search = searchParams.get("search") ?? searchParams.get("q");
 
   const where: Prisma.ClothingItemWhereInput = {};
   const andConditions: Prisma.ClothingItemWhereInput[] = [];
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     const normalizedColor = color.toLowerCase();
     andConditions.push({
       OR: [
-        { primaryColor: { equals: normalizedColor, mode: 'insensitive' } },
+        { primaryColor: { equals: normalizedColor, mode: "insensitive" } },
         { colors: { has: normalizedColor } },
       ],
     });
@@ -47,13 +47,16 @@ export async function GET(request: NextRequest) {
   if (search) {
     const query = search.trim();
     if (query.length > 0) {
-      andConditions.push({
-        OR: [
-          { name: { contains: query, mode: 'insensitive' } },
-          { description: { contains: query, mode: 'insensitive' } },
-          { brand: { contains: query, mode: 'insensitive' } },
-        ],
-      });
+      const orClauses: Prisma.ClothingItemWhereInput[] = [
+        { name: { contains: query, mode: "insensitive" } },
+        { description: { contains: query, mode: "insensitive" } },
+        { brand: { contains: query, mode: "insensitive" } },
+      ];
+      const q = query.toLowerCase();
+      if (q.includes("stripe")) {
+        orClauses.push({ materials: { has: "striped" } });
+      }
+      andConditions.push({ OR: orClauses });
     }
   }
 
@@ -68,13 +71,10 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         images: {
-          orderBy: { isPrimary: 'desc' },
-        },
-        owner: {
-          select: { id: true, name: true, email: true },
+          orderBy: { isPrimary: "desc" },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       skip,
       take: pageSize,
     }),
