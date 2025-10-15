@@ -141,9 +141,18 @@ export const ClothingExplorer = () => {
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-10">
       <header className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
-            Wardrobo
-          </h1>
+          <div className="flex items-center gap-3">
+            <div className="relative h-10 w-40 overflow-hidden sm:h-12 sm:w-48 md:h-14 md:w-56">
+              <Image
+                src="/images/logo.png"
+                alt="Wardrobo logo"
+                fill
+                sizes="(min-width: 768px) 14rem, (min-width: 640px) 12rem, 10rem"
+                className="object-cover"
+                priority
+              />
+            </div>
+          </div>
         </div>
         <p className="text-base text-gray-600">
           Search in natural language (e.g. &ldquo;red striped t-shirt&rdquo; or

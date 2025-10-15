@@ -70,7 +70,7 @@ export default function UploadDropzone({
         <button
           type="button"
           onClick={open}
-          className="mt-1 rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
+          className="mt-1 rounded-xl bg-p1 px-4 py-2 text-sm font-medium text-white hover:bg-p2"
         >
           Choose file
         </button>
