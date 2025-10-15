@@ -13,6 +13,10 @@
 
   --color-p1: #8f6be3;
   --color-p2: #7a5bc2;
+  --color-gray-aaa: #aaaaaa;
+  --color-gray-ddd: #dddddd;
+  --color-gray-666: #666666;
+  --color-gray-999: #999999;
 }
 
 body {

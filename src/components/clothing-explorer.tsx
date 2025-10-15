@@ -154,7 +154,7 @@ export const ClothingExplorer = () => {
             </div>
           </div>
         </div>
-        <p className="text-base text-gray-600">
+        <p className="text-base">
           Search in natural language (e.g. &ldquo;red striped t-shirt&rdquo; or
           &ldquo;black jeans with white flowers&rdquo;). Upload your own photos
           and AI will auto-tag colors, patterns, and type.
@@ -166,31 +166,18 @@ export const ClothingExplorer = () => {
           Search wardrobe
         </label>
         <div className="relative">
-          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="h-5 w-5"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10.5 3.75a6.75 6.75 0 1 0 4.243 11.964l3.771 3.772a.75.75 0 1 0 1.06-1.06l-3.772-3.772A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </span>
+          <MagnifyingGlassIcon />
           <input
             id="search"
             name="search"
             defaultValue={filters.search}
             placeholder='Search for "blue short sleeve tee"'
-            className="h-14 w-full rounded-2xl border border-gray-300 bg-white pl-12 pr-12 text-base shadow-sm outline-none transition focus:border-gray-500"
+            className="h-14 w-full rounded-lg border border-gray-ddd bg-white pl-12 pr-12 text-base outline-none transition focus:border-gray-aaa"
           />
         </div>
       </form>
 
-      <section className="rounded-2xl border border-gray-200/60 bg-white p-6 shadow-sm">
+      <section className="rounded-lg border border-gray-ddd bg-white p-6">
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -230,7 +217,7 @@ export const ClothingExplorer = () => {
           <input
             name="name"
             placeholder="Item name"
-            className="h-12 rounded-xl border border-gray-300 px-4 text-sm outline-none transition focus:border-gray-500"
+            className="h-12 rounded-lg border border-gray-ddd px-4 text-sm outline-none transition focus:border-gray-aaa"
           />
           <UploadDropzone
             selectedFile={selectedFile}
@@ -239,7 +226,7 @@ export const ClothingExplorer = () => {
           <button
             type="submit"
             disabled={isUploading}
-            className="h-12 rounded-xl bg-p1 text-sm font-medium text-white transition hover:bg-p2 disabled:cursor-not-allowed disabled:opacity-40"
+            className="h-12 rounded-lg bg-p1 font-medium text-white transition hover:bg-p2 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isUploading ? "Uploading..." : "Upload item"}
           </button>
@@ -248,15 +235,13 @@ export const ClothingExplorer = () => {
 
       <section>
         {isLoading ? (
-          <div className="flex items-center justify-center rounded-lg border border-dashed border-gray-300 py-16 text-sm text-gray-500">
-            Loading wardrobe suggestions...
+          <div className="flex items-center justify-center rounded-lg border border-dashed border-gray-300 py-16 text-sm text-gray-666">
+            Loading suggestions...
           </div>
         ) : error ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
+          <div className="px-4 py-3 text-sm text-red-600">{error}</div>
         ) : items.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-gray-300 px-4 py-12 text-center text-sm text-gray-500">
+          <div className="rounded-lg border border-dashed border-gray-300 px-4 py-12 text-center text-gray-666">
             No items match your filters yet. Try adjusting your search.
           </div>
         ) : (
@@ -287,12 +272,12 @@ export const ClothingExplorer = () => {
                           className="object-cover"
                         />
                       ) : (
-                        <div className="flex h-full items-center justify-center text-sm text-gray-400">
+                        <div className="flex h-full items-center justify-center text-gray-400">
                           {item.name}
                         </div>
                       )}
                     </div>
-                    <h2 className="truncate text-sm font-medium text-gray-900">
+                    <h2 className="truncate font-medium text-gray-900">
                       {item.name}
                     </h2>
                     {tagChips.length > 0 && (
@@ -344,5 +329,22 @@ export const ClothingExplorer = () => {
     </div>
   );
 };
+
+const MagnifyingGlassIcon = () => (
+  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-666">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="h-5 w-5"
+    >
+      <path
+        fillRule="evenodd"
+        d="M10.5 3.75a6.75 6.75 0 1 0 4.243 11.964l3.771 3.772a.75.75 0 1 0 1.06-1.06l-3.772-3.772A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  </span>
+);
 
 export default ClothingExplorer;
