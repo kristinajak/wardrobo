@@ -262,14 +262,14 @@ export const ClothingExplorer = () => {
                   className="rounded-2xl border border-gray-200 bg-white shadow-sm"
                 >
                   <div className="flex flex-col gap-2 p-3">
-                    <div className="relative h-48 overflow-hidden rounded-xl bg-gray-100">
+                    <div className="relative w-full overflow-hidden rounded-xl bg-gray-100 aspect-[4/5] max-h-64">
                       {imageSrc ? (
                         <Image
                           src={imageSrc}
                           alt={imageAlt}
                           fill
                           sizes="(min-width: 1024px) 240px, (min-width: 768px) 33vw, 100vw"
-                          className="object-cover"
+                          className="object-contain object-center p-2"
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center text-gray-400">

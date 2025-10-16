@@ -48,7 +48,7 @@ const UploadDropzone = ({
       {...getRootProps()}
     >
       <input {...getInputProps()} />
-      <div className="flex flex-col items-center justify-center gap-3 px-6 py-8 text-center text-gray-666">
+      <div className="flex flex-col items-center justify-center gap-3 px-6 py-8 text-center text-gray-aaa">
         <UploadIcon />
         <p className="text-gray-666">
           {isDragActive ? "Drop the image here" : "Drag & drop an image here"}
