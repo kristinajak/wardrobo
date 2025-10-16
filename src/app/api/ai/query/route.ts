@@ -139,8 +139,7 @@ export async function POST(request: NextRequest) {
   }
 
   const searchQuery = (extracted.search ?? "").toString().trim();
-  const hasColorFilter = Boolean(colorCandidate);
-  if (searchQuery && !hasColorFilter) {
+  if (searchQuery) {
     const orClauses: Array<Record<string, unknown>> = [
       { name: { contains: searchQuery, mode: "insensitive" } },
       { description: { contains: searchQuery, mode: "insensitive" } },
