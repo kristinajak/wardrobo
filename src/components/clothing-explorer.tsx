@@ -3,7 +3,6 @@
 import Image from "next/image";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
-import UploadModal from "@/components/upload-modal";
 
 const PAGE_SIZE = 12;
 
@@ -55,7 +54,19 @@ export const ClothingExplorer = () => {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Listen for upload success events from the Header component
+  useEffect(() => {
+    const handleUploadSuccess = () => {
+      setRefreshTrigger((prev) => prev + 1);
+    };
+
+    window.addEventListener("wardrobo:upload-success", handleUploadSuccess);
+    return () => {
+      window.removeEventListener("wardrobo:upload-success", handleUploadSuccess);
+    };
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -114,7 +125,7 @@ export const ClothingExplorer = () => {
     run();
 
     return () => controller.abort();
-  }, [filters]);
+  }, [filters, refreshTrigger]);
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -137,59 +148,29 @@ export const ClothingExplorer = () => {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-10">
-      <header className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative h-10 w-40 overflow-hidden sm:h-12 sm:w-48 md:h-14 md:w-56">
-              <Image
-                src="/images/logo.png"
-                alt="Wardrobo logo"
-                fill
-                sizes="(min-width: 768px) 14rem, (min-width: 640px) 12rem, 10rem"
-                className="object-cover"
-                priority
-              />
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsUploadModalOpen(true)}
-            className="flex items-center gap-2 rounded-lg bg-p1 px-4 py-2 font-medium text-white transition hover:bg-p2"
-          >
-            <UploadIcon />
-            <span className="hidden sm:inline">Upload Item</span>
-          </button>
-        </div>
-        <p className="text-base">
+      <div className="flex flex-col gap-6">
+        <p className="text-base text-gray-700">
           Search in natural language (e.g. &ldquo;red striped t-shirt&rdquo; or
           &ldquo;black jeans with white flowers&rdquo;). Upload your own photos
           and AI will auto-tag colors, patterns, and type.
         </p>
-      </header>
 
-      <form onSubmit={handleSearchSubmit} className="w-full">
-        <label htmlFor="search" className="sr-only">
-          Search wardrobe
-        </label>
-        <div className="relative">
-          <MagnifyingGlassIcon />
-          <input
-            id="search"
-            name="search"
-            defaultValue={filters.search}
-            placeholder='Search for "blue short sleeve tee"'
-            className="h-14 w-full rounded-lg border border-gray-ddd bg-white pl-12 pr-12 text-base outline-none transition focus:border-gray-aaa"
-          />
-        </div>
-      </form>
-
-      <UploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        onUploadSuccess={() => {
-          setFilters((current) => ({ ...current }));
-        }}
-      />
+        <form onSubmit={handleSearchSubmit} className="w-full">
+          <label htmlFor="search" className="sr-only">
+            Search wardrobe
+          </label>
+          <div className="relative">
+            <MagnifyingGlassIcon />
+            <input
+              id="search"
+              name="search"
+              defaultValue={filters.search}
+              placeholder='Search for "blue short sleeve tee"'
+              className="h-14 w-full rounded-lg border border-gray-ddd bg-white pl-12 pr-12 text-base outline-none transition focus:border-gray-aaa"
+            />
+          </div>
+        </form>
+      </div>
 
       <section>
         {isLoading ? (
@@ -303,21 +284,6 @@ const MagnifyingGlassIcon = () => (
       />
     </svg>
   </span>
-);
-
-const UploadIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="h-5 w-5"
-  >
-    <path
-      fillRule="evenodd"
-      d="M11.47 2.47a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06l-3.22-3.22V16.5a.75.75 0 0 1-1.5 0V4.81L8.03 8.03a.75.75 0 0 1-1.06-1.06l4.5-4.5ZM3 15.75a.75.75 0 0 1 .75.75v2.25a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V16.5a.75.75 0 0 1 1.5 0v2.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V16.5a.75.75 0 0 1 .75-.75Z"
-      clipRule="evenodd"
-    />
-  </svg>
 );
 
 export default ClothingExplorer;
