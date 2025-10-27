@@ -153,6 +153,8 @@ export async function POST(request: NextRequest) {
       orClauses.push({ materials: { has: "pattern:dotted" } });
     if (q.includes("floral") || q.includes("flower"))
       orClauses.push({ materials: { has: "pattern:floral" } });
+    if (q.includes("graphic") || q.includes("print"))
+      orClauses.push({ materials: { has: "pattern:graphic" } });
 
     // closure and hood
     if (q.includes("zip"))
@@ -182,6 +184,19 @@ export async function POST(request: NextRequest) {
       orClauses.push({ materials: { has: "type:dress" } });
     if (q.includes("skirt"))
       orClauses.push({ materials: { has: "type:skirt" } });
+    if (q.includes("sweater"))
+      orClauses.push({ materials: { has: "type:sweater" } });
+    if (q.includes("sweatshirt"))
+      orClauses.push({ materials: { has: "type:sweatshirt" } });
+    if (q.includes("hoodie"))
+      orClauses.push({ materials: { has: "type:hoodie" } });
+
+    // graphic/design search - look for exact graphic token
+    orClauses.push({
+      materials: {
+        has: `graphic:${q}`,
+      },
+    });
 
     andConditions.push({ OR: orClauses });
   }

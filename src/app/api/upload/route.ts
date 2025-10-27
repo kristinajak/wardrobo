@@ -16,6 +16,7 @@ type VisionExtraction = {
   clothingType?: string | null;
   sleeve?: string | null;
   pattern?: string | null;
+  graphicDescription?: string | null;
   closure?: string | null;
 };
 
@@ -74,6 +75,9 @@ function buildDerivedFeatureTokens(v: VisionExtraction): string[] {
     jacket: "type:jacket",
     dress: "type:dress",
     skirt: "type:skirt",
+    sweater: "type:sweater",
+    sweatshirt: "type:sweatshirt",
+    hoodie: "type:hoodie",
   };
   const sleeveMap: Record<string, string> = {
     short: "sleeve:short",
@@ -89,6 +93,7 @@ function buildDerivedFeatureTokens(v: VisionExtraction): string[] {
     floral: "pattern:floral",
     flower: "pattern:floral",
     solid: "pattern:solid",
+    graphic: "pattern:graphic",
   };
 
   const ct = (v.clothingType || "").toLowerCase();
@@ -112,6 +117,32 @@ function buildDerivedFeatureTokens(v: VisionExtraction): string[] {
   if (feats.some((f) => f.includes("v-neck") || f.includes("v neck")))
     tokens.push("neck:v");
   if (feats.some((f) => f.includes("polo"))) tokens.push("type:shirt");
+
+  // Handle graphic descriptions - extract individual keywords for better searchability
+  const graphicDesc = (v.graphicDescription || "").toLowerCase().trim();
+  if (graphicDesc) {
+    tokens.push(`graphic:${graphicDesc}`);
+
+    const stopWords = new Set([
+      "on",
+      "with",
+      "and",
+      "the",
+      "a",
+      "an",
+      "of",
+      "in",
+      "at",
+    ]);
+    const words = graphicDesc
+      .split(/[\s,]+/)
+      .map((w) => w.trim())
+      .filter((w) => w.length > 2 && !stopWords.has(w));
+
+    words.forEach((word) => {
+      tokens.push(`graphic:${word}`);
+    });
+  }
 
   return tokens;
 }
@@ -150,7 +181,7 @@ async function analyzeImageWithVision(
           {
             role: "system",
             content:
-              "You are an assistant that extracts apparel attributes from an image. Return ONLY JSON with keys: primaryColor (string|nullable lowercase), colors (array of lowercase strings), category (one of: TOP,BOTTOM,OUTERWEAR,FOOTWEAR,ACCESSORY,DRESS or null), clothingType (REQUIRED; one of: tshirt, shirt, jeans, jacket, dress, skirt, shorts, sweater, hoodie, coat, blouse, pants), sleeve (short,long,sleeveless|null), pattern (striped,dotted,floral,solid|null), closure (zipper,buttons,none|null), features (array of short tokens like 'zipper','buttons','stripe','hood').",
+              "You are an assistant that extracts apparel attributes from an image. Return ONLY JSON with keys: primaryColor (string|nullable lowercase), colors (array of lowercase strings), category (one of: TOP,BOTTOM,OUTERWEAR,FOOTWEAR,ACCESSORY,DRESS or null), clothingType (REQUIRED; one of: tshirt, shirt, jeans, jacket, dress, skirt, shorts, sweater, sweatshirt, hoodie, coat, blouse, pants), sleeve (short,long,sleeveless|null), pattern (striped,dotted,floral,solid,graphic|null), graphicDescription (string describing any prints, logos, animals, text, or designs on the garment|null), closure (zipper,buttons,none|null), features (array of short tokens like 'zipper','buttons','stripe','hood','crewneck','v-neck').",
           },
           {
             role: "user",
