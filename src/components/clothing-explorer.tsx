@@ -3,7 +3,7 @@
 import Image from "next/image";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
-import UploadDropzone from "@/components/upload-dropzone";
+import UploadModal from "@/components/upload-modal";
 
 const PAGE_SIZE = 12;
 
@@ -55,9 +55,7 @@ export const ClothingExplorer = () => {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // AI is used when a prompt is provided; empty prompt loads all items
-  const [isUploading, setIsUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -153,6 +151,14 @@ export const ClothingExplorer = () => {
               />
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setIsUploadModalOpen(true)}
+            className="flex items-center gap-2 rounded-lg bg-p1 px-4 py-2 font-medium text-white transition hover:bg-p2"
+          >
+            <UploadIcon />
+            <span className="hidden sm:inline">Upload Item</span>
+          </button>
         </div>
         <p className="text-base">
           Search in natural language (e.g. &ldquo;red striped t-shirt&rdquo; or
@@ -177,61 +183,13 @@ export const ClothingExplorer = () => {
         </div>
       </form>
 
-      <section className="rounded-lg border border-gray-ddd bg-white p-6">
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const form = e.currentTarget as HTMLFormElement;
-            const formDataFromForm = new FormData(form);
-            const name = String(formDataFromForm.get("name") || "").trim();
-            if (!selectedFile) {
-              setError("Please select an image to upload.");
-              return;
-            }
-            const data = new FormData();
-            if (name) data.append("name", name);
-            data.append("file", selectedFile);
-            setIsUploading(true);
-            setError(null);
-            try {
-              const resp = await fetch("/api/upload", {
-                method: "POST",
-                body: data,
-              });
-              if (!resp.ok) {
-                const text = await resp.text();
-                throw new Error(`Upload failed: ${resp.status} ${text}`);
-              }
-              // refresh list
-              setFilters((current) => ({ ...current }));
-              form.reset();
-              setSelectedFile(null);
-            } catch (err) {
-              setError((err as Error).message);
-            } finally {
-              setIsUploading(false);
-            }
-          }}
-          className="grid gap-4"
-        >
-          <input
-            name="name"
-            placeholder="Item name"
-            className="h-12 rounded-lg border border-gray-ddd px-4 text-sm outline-none transition focus:border-gray-aaa"
-          />
-          <UploadDropzone
-            selectedFile={selectedFile}
-            onFileSelected={setSelectedFile}
-          />
-          <button
-            type="submit"
-            disabled={isUploading}
-            className="h-12 rounded-lg bg-p1 font-medium text-white transition hover:bg-p2 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {isUploading ? "Uploading..." : "Upload item"}
-          </button>
-        </form>
-      </section>
+      <UploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onUploadSuccess={() => {
+          setFilters((current) => ({ ...current }));
+        }}
+      />
 
       <section>
         {isLoading ? (
@@ -345,6 +303,21 @@ const MagnifyingGlassIcon = () => (
       />
     </svg>
   </span>
+);
+
+const UploadIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className="h-5 w-5"
+  >
+    <path
+      fillRule="evenodd"
+      d="M11.47 2.47a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06l-3.22-3.22V16.5a.75.75 0 0 1-1.5 0V4.81L8.03 8.03a.75.75 0 0 1-1.06-1.06l4.5-4.5ZM3 15.75a.75.75 0 0 1 .75.75v2.25a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V16.5a.75.75 0 0 1 1.5 0v2.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V16.5a.75.75 0 0 1 .75-.75Z"
+      clipRule="evenodd"
+    />
+  </svg>
 );
 
 export default ClothingExplorer;
