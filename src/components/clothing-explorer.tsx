@@ -64,7 +64,10 @@ export const ClothingExplorer = () => {
 
     window.addEventListener("wardrobo:upload-success", handleUploadSuccess);
     return () => {
-      window.removeEventListener("wardrobo:upload-success", handleUploadSuccess);
+      window.removeEventListener(
+        "wardrobo:upload-success",
+        handleUploadSuccess
+      );
     };
   }, []);
 
@@ -139,6 +142,25 @@ export const ClothingExplorer = () => {
     }));
   };
 
+  const handleClearSearch = () => {
+    setFilters((current) => ({
+      ...current,
+      search: "",
+      page: 1,
+    }));
+  };
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    if (value.trim() === "" && filters.search !== "") {
+      setFilters((current) => ({
+        ...current,
+        search: "",
+        page: 1,
+      }));
+    }
+  };
+
   const goToPage = (page: number) => {
     setFilters((current) => ({
       ...current,
@@ -164,10 +186,33 @@ export const ClothingExplorer = () => {
             <input
               id="search"
               name="search"
+              key={filters.search}
               defaultValue={filters.search}
+              onChange={handleSearchChange}
               placeholder='Search for "blue short sleeve tee"'
               className="h-14 w-full rounded-lg border border-gray-ddd bg-white pl-12 pr-12 text-base outline-none transition focus:border-gray-aaa"
             />
+            {filters.search && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                aria-label="Clear search"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-5 w-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            )}
           </div>
         </form>
       </div>
