@@ -43,18 +43,23 @@ type Filters = {
   page: number;
 };
 
-export const ClothingExplorer = () => {
+type ClothingExplorerProps = {
+  initialData?: ApiResponse;
+};
+
+export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
   const [filters, setFilters] = useState<Filters>({
     search: "",
     page: 1,
   });
 
-  const [items, setItems] = useState<ClothingItem[]>([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [items, setItems] = useState<ClothingItem[]>(initialData?.data ?? []);
+  const [totalPages, setTotalPages] = useState(initialData?.meta.totalPages ?? 1);
+  const [total, setTotal] = useState(initialData?.meta.total ?? 0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [hasInitialData, setHasInitialData] = useState(!!initialData);
 
   // Listen for upload success events from the Header component
   useEffect(() => {
@@ -72,10 +77,16 @@ export const ClothingExplorer = () => {
   }, []);
 
   useEffect(() => {
+    // Skip fetch if we're showing initial server-rendered data
+    if (hasInitialData && filters.page === 1 && !filters.search && refreshTrigger === 0) {
+      return;
+    }
+
     const controller = new AbortController();
     const run = async () => {
       setIsLoading(true);
       setError(null);
+      setHasInitialData(false);
 
       try {
         if (!filters.search.trim()) {
@@ -128,7 +139,7 @@ export const ClothingExplorer = () => {
     run();
 
     return () => controller.abort();
-  }, [filters, refreshTrigger]);
+  }, [filters, refreshTrigger, hasInitialData]);
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
