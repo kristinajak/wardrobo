@@ -319,7 +319,11 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json({ data: created });
   } catch (err) {
-    console.error("/api/upload failed", err);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    console.error("/api/upload database error:", err);
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json(
+      { error: "Upload failed", details: errorMessage },
+      { status: 500 }
+    );
   }
 }
