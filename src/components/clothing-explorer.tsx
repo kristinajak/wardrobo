@@ -86,7 +86,11 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
 
     const controller = new AbortController();
     const run = async () => {
-      setIsLoading(true);
+      if (filters.page === 1) {
+        setIsLoading(true);
+      } else {
+        setIsLoadingMore(true);
+      }
       setError(null);
       setHasInitialData(false);
 
@@ -157,7 +161,6 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
     if (isLoading || isLoadingMore || filters.page >= totalPages) {
       return;
     }
-    setIsLoadingMore(true);
     setFilters((current) => ({
       ...current,
       page: current.page + 1,
