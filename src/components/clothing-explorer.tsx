@@ -54,7 +54,9 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
   });
 
   const [items, setItems] = useState<ClothingItem[]>(initialData?.data ?? []);
-  const [totalPages, setTotalPages] = useState(initialData?.meta.totalPages ?? 1);
+  const [totalPages, setTotalPages] = useState(
+    initialData?.meta.totalPages ?? 1
+  );
   const [total, setTotal] = useState(initialData?.meta.total ?? 0);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -80,12 +82,18 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
 
   useEffect(() => {
     // Skip fetch if we're showing initial server-rendered data
-    if (hasInitialData && filters.page === 1 && !filters.search && refreshTrigger === 0) {
+    if (
+      hasInitialData &&
+      filters.page === 1 &&
+      !filters.search &&
+      refreshTrigger === 0
+    ) {
       return;
     }
 
     const controller = new AbortController();
     const run = async () => {
+      const loadingStartTime = Date.now();
       if (filters.page === 1) {
         setIsLoading(true);
       } else {
@@ -146,6 +154,13 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
         }
         setError((err as Error).message);
       } finally {
+        // Show spinner for at least 500ms for better UX
+        const elapsedTime = Date.now() - loadingStartTime;
+        const minDisplayTime = 500;
+        const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+        if (remainingTime > 0) {
+          await new Promise((resolve) => setTimeout(resolve, remainingTime));
+        }
         setIsLoading(false);
         setIsLoadingMore(false);
       }
