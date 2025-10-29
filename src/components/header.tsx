@@ -12,15 +12,20 @@ export const Header = () => {
 
   const handleUploadSuccess = () => {
     setIsUploadModalOpen(false);
-    router.refresh();
-    window.dispatchEvent(new CustomEvent("wardrobo:upload-success"));
+    setTimeout(() => {
+      router.refresh();
+      window.dispatchEvent(new CustomEvent("wardrobo:upload-success"));
+    }, 300);
   };
 
   return (
     <>
       <header className="bg-white">
         <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-4">
-          <Link href="/" className="relative h-10 w-40 overflow-hidden sm:h-12 sm:w-48 md:h-14 md:w-56 transition-opacity">
+          <Link
+            href="/"
+            className="relative h-10 w-40 overflow-hidden sm:h-12 sm:w-48 md:h-14 md:w-56 transition-opacity"
+          >
             <Image
               src="/images/logo.png"
               alt="Wardrobo logo"
@@ -67,4 +72,3 @@ const UploadIcon = () => (
 );
 
 export default Header;
-

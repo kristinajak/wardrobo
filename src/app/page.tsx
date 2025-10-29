@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma";
 
 const PAGE_SIZE = 12;
 
+// Disable caching to always show fresh data
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function Home() {
   // Fetch initial data on the server for instant display
   const [items, total] = await prisma.$transaction([
