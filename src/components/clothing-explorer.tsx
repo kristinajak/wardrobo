@@ -68,6 +68,7 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
   // Listen for upload success events from the Header component
   useEffect(() => {
     const handleUploadSuccess = () => {
+      setFilters({ search: "", page: 1 });
       setRefreshTrigger((prev) => prev + 1);
     };
 
