@@ -178,8 +178,15 @@ export async function POST(request: NextRequest) {
       orClauses.push({ materials: { has: "type:shirt" } });
     if (q.includes("jeans"))
       orClauses.push({ materials: { has: "type:jeans" } });
+    if (q.includes("pants") || q.includes("trousers") || q.includes("chinos"))
+      orClauses.push({ materials: { has: "type:pants" } });
+    if (q.includes("shorts"))
+      orClauses.push({ materials: { has: "type:shorts" } });
     if (q.includes("jacket"))
       orClauses.push({ materials: { has: "type:jacket" } });
+    if (q.includes("coat")) orClauses.push({ materials: { has: "type:coat" } });
+    if (q.includes("blazer"))
+      orClauses.push({ materials: { has: "type:blazer" } });
     if (q.includes("dress"))
       orClauses.push({ materials: { has: "type:dress" } });
     if (q.includes("skirt"))
@@ -190,6 +197,8 @@ export async function POST(request: NextRequest) {
       orClauses.push({ materials: { has: "type:sweatshirt" } });
     if (q.includes("hoodie"))
       orClauses.push({ materials: { has: "type:hoodie" } });
+    if (q.includes("blouse"))
+      orClauses.push({ materials: { has: "type:blouse" } });
 
     // graphic/design search - look for exact graphic token
     orClauses.push({
