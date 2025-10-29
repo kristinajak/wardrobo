@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import type { FormEvent } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 const PAGE_SIZE = 12;
 
@@ -57,9 +57,11 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
   const [totalPages, setTotalPages] = useState(initialData?.meta.totalPages ?? 1);
   const [total, setTotal] = useState(initialData?.meta.total ?? 0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [hasInitialData, setHasInitialData] = useState(!!initialData);
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   // Listen for upload success events from the Header component
   useEffect(() => {
@@ -101,7 +103,11 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
             throw new Error(`Request failed with status ${response.status}`);
           }
           const payload: ApiResponse = await response.json();
-          setItems(payload.data);
+          if (filters.page > 1) {
+            setItems((prev) => [...prev, ...payload.data]);
+          } else {
+            setItems(payload.data);
+          }
           setTotalPages(payload.meta.totalPages);
           setTotal(payload.meta.total);
           return;
@@ -123,7 +129,11 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
         }
 
         const payload: ApiResponse = await response.json();
-        setItems(payload.data);
+        if (filters.page > 1) {
+          setItems((prev) => [...prev, ...payload.data]);
+        } else {
+          setItems(payload.data);
+        }
         setTotalPages(payload.meta.totalPages);
         setTotal(payload.meta.total);
       } catch (err) {
@@ -133,6 +143,7 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
         setError((err as Error).message);
       } finally {
         setIsLoading(false);
+        setIsLoadingMore(false);
       }
     };
 
@@ -140,6 +151,38 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
 
     return () => controller.abort();
   }, [filters, refreshTrigger, hasInitialData]);
+
+  // Load more when scrolling to bottom
+  const loadMore = useCallback(() => {
+    if (isLoading || isLoadingMore || filters.page >= totalPages) {
+      return;
+    }
+    setIsLoadingMore(true);
+    setFilters((current) => ({
+      ...current,
+      page: current.page + 1,
+    }));
+  }, [isLoading, isLoadingMore, filters.page, totalPages]);
+
+  useEffect(() => {
+    const target = observerTarget.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(target);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [loadMore]);
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -170,13 +213,6 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
         page: 1,
       }));
     }
-  };
-
-  const goToPage = (page: number) => {
-    setFilters((current) => ({
-      ...current,
-      page,
-    }));
   };
 
   return (
@@ -293,34 +329,21 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
             })}
           </ul>
         )}
+        {/* Infinite scroll trigger */}
+        {!isLoading && items.length > 0 && items.length < total && (
+          <div ref={observerTarget} className="flex justify-center py-8">
+            {isLoadingMore && <LoadingSpinner />}
+          </div>
+        )}
       </section>
 
-      <footer className="flex flex-col items-center gap-2 border-t border-gray-200 pt-6 text-sm text-gray-600 sm:flex-row sm:justify-between">
-        <span>
-          Showing {items.length} of {total} items
-        </span>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            disabled={filters.page <= 1 || isLoading}
-            onClick={() => goToPage(Math.max(1, filters.page - 1))}
-            className="rounded-md border border-gray-300 px-3 py-1 text-sm transition disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Previous
-          </button>
+      {items.length > 0 && (
+        <footer className="flex justify-center border-t border-gray-200 pt-6 text-sm text-gray-600">
           <span>
-            Page {filters.page} / {totalPages}
+            Showing {items.length} of {total} items
           </span>
-          <button
-            type="button"
-            disabled={filters.page >= totalPages || isLoading}
-            onClick={() => goToPage(Math.min(totalPages, filters.page + 1))}
-            className="rounded-md border border-gray-300 px-3 py-1 text-sm transition disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Next
-          </button>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 };
