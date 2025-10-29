@@ -65,9 +65,35 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
   const [hasInitialData, setHasInitialData] = useState(!!initialData);
   const observerTarget = useRef<HTMLDivElement>(null);
 
+  // Local input value for immediate UI updates
+  const [searchInput, setSearchInput] = useState("");
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced search
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      setFilters((current) => ({
+        ...current,
+        search: searchInput,
+        page: 1,
+      }));
+    }, 500);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [searchInput]);
+
   // Listen for upload success events from the Header component
   useEffect(() => {
     const handleUploadSuccess = () => {
+      setSearchInput("");
       setFilters({ search: "", page: 1 });
       setRefreshTrigger((prev) => prev + 1);
     };
@@ -205,33 +231,19 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const searchValue = String(formData.get("search") ?? "");
-
     setFilters((current) => ({
       ...current,
-      search: searchValue,
+      search: searchInput,
       page: 1,
     }));
   };
 
   const handleClearSearch = () => {
-    setFilters((current) => ({
-      ...current,
-      search: "",
-      page: 1,
-    }));
+    setSearchInput("");
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    if (value.trim() === "" && filters.search !== "") {
-      setFilters((current) => ({
-        ...current,
-        search: "",
-        page: 1,
-      }));
-    }
+    setSearchInput(event.target.value);
   };
 
   return (
@@ -252,13 +264,12 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
             <input
               id="search"
               name="search"
-              key={filters.search}
-              defaultValue={filters.search}
+              value={searchInput}
               onChange={handleSearchChange}
               placeholder='Search for "blue short sleeve tee"'
               className="h-14 w-full rounded-lg border border-gray-ddd bg-white pl-12 pr-12 text-base outline-none transition focus:border-gray-aaa"
             />
-            {filters.search && (
+            {searchInput && (
               <button
                 type="button"
                 onClick={handleClearSearch}
