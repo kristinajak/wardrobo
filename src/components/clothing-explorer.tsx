@@ -129,13 +129,15 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
     const controller = new AbortController();
     const run = async () => {
       const loadingStartTime = Date.now();
+      setError(null);
+      setHasInitialData(false);
+
       if (filters.page === 1) {
+        setItems([]);
         setIsLoading(true);
       } else {
         setIsLoadingMore(true);
       }
-      setError(null);
-      setHasInitialData(false);
 
       try {
         if (!filters.search.trim()) {
