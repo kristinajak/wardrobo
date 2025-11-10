@@ -131,6 +131,7 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
       const loadingStartTime = Date.now();
       if (filters.page === 1) {
         setIsLoading(true);
+        setItems([]);
       } else {
         setIsLoadingMore(true);
       }
