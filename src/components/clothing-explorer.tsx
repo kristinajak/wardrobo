@@ -302,7 +302,7 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
         </form>
 
         {/* Example Questions */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-4">
           {EXAMPLE_QUERIES.map((example) => (
             <button
               key={example}

@@ -11,6 +11,11 @@ type AiExtraction = {
   brand?: string | null;
   priceMin?: number | null;
   priceMax?: number | null;
+  clothingType?: string | null;
+  pattern?: string | null;
+  sleeve?: string | null;
+  graphic?: string | null;
+  features?: string[] | null;
 };
 
 function normalizeExtraction(raw: unknown): AiExtraction {
@@ -19,6 +24,8 @@ function normalizeExtraction(raw: unknown): AiExtraction {
   const coerceString = (v: unknown) => (typeof v === "string" ? v : null);
   const coerceNumber = (v: unknown) =>
     typeof v === "number" && Number.isFinite(v) ? v : null;
+  const coerceStringArray = (v: unknown) =>
+    Array.isArray(v) ? v.filter((x) => typeof x === "string") : null;
 
   const category = coerceString(obj.category)?.toUpperCase() ?? null;
   const color = coerceString(obj.color)?.toLowerCase() ?? null;
@@ -26,8 +33,25 @@ function normalizeExtraction(raw: unknown): AiExtraction {
   const brand = coerceString(obj.brand) ?? null;
   const priceMin = coerceNumber(obj.priceMin);
   const priceMax = coerceNumber(obj.priceMax);
+  const clothingType = coerceString(obj.clothingType)?.toLowerCase() ?? null;
+  const pattern = coerceString(obj.pattern)?.toLowerCase() ?? null;
+  const sleeve = coerceString(obj.sleeve)?.toLowerCase() ?? null;
+  const graphic = coerceString(obj.graphic)?.toLowerCase() ?? null;
+  const features = coerceStringArray(obj.features);
 
-  return { category, color, search, brand, priceMin, priceMax };
+  return {
+    category,
+    color,
+    search,
+    brand,
+    priceMin,
+    priceMax,
+    clothingType,
+    pattern,
+    sleeve,
+    graphic,
+    features,
+  };
 }
 
 async function extractFiltersWithOpenAI(prompt: string): Promise<AiExtraction> {
@@ -48,7 +72,7 @@ async function extractFiltersWithOpenAI(prompt: string): Promise<AiExtraction> {
         {
           role: "system",
           content:
-            "Extract structured clothing search filters from the user's request. Return ONLY a compact JSON object with keys: category, color, search, brand, priceMin, priceMax. category must be one of: TOP, BOTTOM, OUTERWEAR, FOOTWEAR, ACCESSORY, DRESS, or null. color should be a lowercase simple color word if present (e.g., blue). search is a concise keyword phrase (e.g., 'blue t shirt'). brand is a single brand name if present. priceMin/priceMax are numbers if mentioned, else null.",
+            "Extract structured clothing search filters from the user's request. Return ONLY a compact JSON object with these keys (all optional/nullable): category (TOP|BOTTOM|OUTERWEAR|FOOTWEAR|ACCESSORY|DRESS), color (lowercase color word), clothingType (tshirt|shirt|sweatshirt|hoodie|sweater|jeans|pants|shorts|jacket|coat|blazer|dress|skirt|blouse), pattern (striped|dotted|floral|graphic|solid), sleeve (short|long|sleeveless), graphic (description of any print/logo/design like 'snake' or 'star logo'), features (array of strings like ['hood','zipper','buttons']), brand (brand name), priceMin/priceMax (numbers), search (ONLY use if query doesn't fit structured fields - free text fallback). CRITICAL: Only extract fields that are EXPLICITLY mentioned in the user's query. Do NOT infer or guess values. If a field is not mentioned, set it to null. For example, if the user says 'blue t-shirt', do NOT set pattern to 'solid' - leave pattern as null.",
         },
         {
           role: "user",
@@ -138,76 +162,99 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  const materialConditions: Array<Record<string, unknown>> = [];
+
+  if (extracted.clothingType) {
+    const typeMap: Record<string, string> = {
+      tshirt: "type:tshirt",
+      shirt: "type:shirt",
+      sweatshirt: "type:sweatshirt",
+      hoodie: "type:hoodie",
+      sweater: "type:sweater",
+      jeans: "type:jeans",
+      pants: "type:pants",
+      shorts: "type:shorts",
+      jacket: "type:jacket",
+      coat: "type:coat",
+      blazer: "type:blazer",
+      dress: "type:dress",
+      skirt: "type:skirt",
+      blouse: "type:blouse",
+    };
+    const token = typeMap[extracted.clothingType];
+    if (token) {
+      materialConditions.push({ materials: { has: token } });
+    }
+  }
+
+  if (extracted.pattern) {
+    const patternMap: Record<string, string> = {
+      striped: "pattern:striped",
+      dotted: "pattern:dotted",
+      floral: "pattern:floral",
+      graphic: "pattern:graphic",
+      solid: "pattern:solid",
+    };
+    const token = patternMap[extracted.pattern];
+    if (token) {
+      materialConditions.push({ materials: { has: token } });
+    }
+  }
+
+  if (extracted.sleeve) {
+    const sleeveMap: Record<string, string> = {
+      short: "sleeve:short",
+      long: "sleeve:long",
+      sleeveless: "sleeve:sleeveless",
+    };
+    const token = sleeveMap[extracted.sleeve];
+    if (token) {
+      materialConditions.push({ materials: { has: token } });
+    }
+  }
+
+  if (extracted.graphic) {
+    const graphicDesc = extracted.graphic.trim().toLowerCase();
+    const orGraphicClauses: Array<Record<string, unknown>> = [
+      { materials: { has: `graphic:${graphicDesc}` } },
+    ];
+
+    const words = graphicDesc.split(/\s+/).filter((w) => w.length > 2);
+    words.forEach((word) => {
+      orGraphicClauses.push({ materials: { has: `graphic:${word}` } });
+    });
+
+    materialConditions.push({ OR: orGraphicClauses });
+  }
+
+  if (extracted.features && extracted.features.length > 0) {
+    extracted.features.forEach((feature) => {
+      const f = feature.toLowerCase();
+      if (f.includes("hood")) {
+        materialConditions.push({ materials: { has: "hood" } });
+      }
+      if (f.includes("zip")) {
+        materialConditions.push({ materials: { has: "closure:zipper" } });
+      }
+      if (f.includes("button")) {
+        materialConditions.push({ materials: { has: "closure:buttons" } });
+      }
+    });
+  }
+
+  if (materialConditions.length > 0) {
+    andConditions.push(...materialConditions);
+  }
+
   const searchQuery = (extracted.search ?? "").toString().trim();
-  if (searchQuery) {
-    const orClauses: Array<Record<string, unknown>> = [
+  if (searchQuery && materialConditions.length === 0) {
+    const textSearchClauses: Array<Record<string, unknown>> = [
       { name: { contains: searchQuery, mode: "insensitive" } },
       { description: { contains: searchQuery, mode: "insensitive" } },
       { brand: { contains: searchQuery, mode: "insensitive" } },
+      { materials: { has: `graphic:${searchQuery}` } },
     ];
-    const q = searchQuery.toLowerCase();
-    // pattern mappings
-    if (q.includes("stripe"))
-      orClauses.push({ materials: { has: "pattern:striped" } });
-    if (q.includes("polka") || q.includes("dotted") || q.includes("dot"))
-      orClauses.push({ materials: { has: "pattern:dotted" } });
-    if (q.includes("floral") || q.includes("flower"))
-      orClauses.push({ materials: { has: "pattern:floral" } });
-    if (q.includes("graphic") || q.includes("print"))
-      orClauses.push({ materials: { has: "pattern:graphic" } });
-
-    // closure and hood
-    if (q.includes("zip"))
-      orClauses.push({ materials: { has: "closure:zipper" } });
-    if (q.includes("button"))
-      orClauses.push({ materials: { has: "closure:buttons" } });
-    if (q.includes("hood")) orClauses.push({ materials: { has: "hood" } });
-
-    // sleeve
-    if (q.includes("short sleeve"))
-      orClauses.push({ materials: { has: "sleeve:short" } });
-    if (q.includes("long sleeve"))
-      orClauses.push({ materials: { has: "sleeve:long" } });
-    if (q.includes("sleeveless"))
-      orClauses.push({ materials: { has: "sleeve:sleeveless" } });
-
-    // type mappings
-    if (q.includes("t-shirt") || q.includes("tshirt") || q.includes("tee"))
-      orClauses.push({ materials: { has: "type:tshirt" } });
-    if (q.includes("shirt"))
-      orClauses.push({ materials: { has: "type:shirt" } });
-    if (q.includes("jeans"))
-      orClauses.push({ materials: { has: "type:jeans" } });
-    if (q.includes("pants") || q.includes("trousers") || q.includes("chinos"))
-      orClauses.push({ materials: { has: "type:pants" } });
-    if (q.includes("shorts"))
-      orClauses.push({ materials: { has: "type:shorts" } });
-    if (q.includes("jacket"))
-      orClauses.push({ materials: { has: "type:jacket" } });
-    if (q.includes("coat")) orClauses.push({ materials: { has: "type:coat" } });
-    if (q.includes("blazer"))
-      orClauses.push({ materials: { has: "type:blazer" } });
-    if (q.includes("dress"))
-      orClauses.push({ materials: { has: "type:dress" } });
-    if (q.includes("skirt"))
-      orClauses.push({ materials: { has: "type:skirt" } });
-    if (q.includes("sweater"))
-      orClauses.push({ materials: { has: "type:sweater" } });
-    if (q.includes("sweatshirt"))
-      orClauses.push({ materials: { has: "type:sweatshirt" } });
-    if (q.includes("hoodie"))
-      orClauses.push({ materials: { has: "type:hoodie" } });
-    if (q.includes("blouse"))
-      orClauses.push({ materials: { has: "type:blouse" } });
-
-    // graphic/design search - look for exact graphic token
-    orClauses.push({
-      materials: {
-        has: `graphic:${q}`,
-      },
-    });
-
-    andConditions.push({ OR: orClauses });
+    andConditions.push({ OR: textSearchClauses });
   }
 
   if (extracted.brand) {
