@@ -10,8 +10,8 @@ const EXAMPLE_QUERIES = [
   "red striped t-shirt",
   "sweatshirt with snake",
   "blue short sleeve t-shirt",
-  "flower pattern",
-  "patterned sweater",
+  "jacket with flower pattern",
+  "beige trousers",
 ];
 
 type ClothingImage = {
