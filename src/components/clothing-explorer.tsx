@@ -6,6 +6,14 @@ import { useEffect, useState, useRef, useCallback } from "react";
 
 const PAGE_SIZE = 12;
 
+const EXAMPLE_QUERIES = [
+  "red striped t-shirt",
+  "sweatshirt with snake",
+  "blue short sleeve t-shirt",
+  "flower pattern",
+  "patterned sweater",
+];
+
 type ClothingImage = {
   id: number;
   url: string;
@@ -251,8 +259,8 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
       <div className="flex flex-col gap-6">
         <p className="text-base text-gray-700">
           Search in natural language (e.g. &ldquo;red striped t-shirt&rdquo; or
-          &ldquo;black jeans with white flowers&rdquo;). Upload your own photos
-          and AI will auto-tag colors, patterns, and type.
+          &ldquo;sweatshirt with snake&rdquo;). Upload your own photos and AI
+          will auto-tag colors, patterns, and type.
         </p>
 
         <form onSubmit={handleSearchSubmit} className="w-full">
@@ -292,6 +300,20 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
             )}
           </div>
         </form>
+
+        {/* Example Questions */}
+        <div className="flex flex-wrap gap-2">
+          {EXAMPLE_QUERIES.map((example) => (
+            <button
+              key={example}
+              type="button"
+              onClick={() => setSearchInput(example)}
+              className="rounded-full bg-p1 text-white px-4 py-1 text-sm transition hover:bg-p2"
+            >
+              {example}
+            </button>
+          ))}
+        </div>
       </div>
 
       <section>
