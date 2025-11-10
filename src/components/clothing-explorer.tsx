@@ -206,6 +206,7 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
     run();
 
     return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, refreshTrigger]);
 
   // Load more when scrolling to bottom
@@ -320,9 +321,11 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
 
       <section>
         {isLoading ? (
-          <div className="flex items-center justify-center rounded-lg border border-dashed border-gray-300 py-16">
-            <LoadingSpinner />
-          </div>
+          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 9 }).map((_, idx) => (
+              <SkeletonCard key={idx} />
+            ))}
+          </ul>
         ) : error ? (
           <div className="px-4 py-3 text-sm text-red-600">{error}</div>
         ) : items.length === 0 ? (
@@ -401,6 +404,20 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
     </div>
   );
 };
+
+const SkeletonCard = () => (
+  <li className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div className="flex flex-col gap-2 p-3">
+      <div className="relative w-full overflow-hidden rounded-xl bg-gray-100 aspect-[4/5] max-h-64 animate-pulse" />
+      <div className="h-6 bg-gray-200 rounded animate-pulse w-3/4" />
+      <div className="mt-1 flex flex-wrap gap-2">
+        <div className="h-6 bg-gray-200 rounded-full animate-pulse w-16" />
+        <div className="h-6 bg-gray-200 rounded-full animate-pulse w-20" />
+        <div className="h-6 bg-gray-200 rounded-full animate-pulse w-14" />
+      </div>
+    </div>
+  </li>
+);
 
 const MagnifyingGlassIcon = () => (
   <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-666">
