@@ -131,7 +131,6 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
       const loadingStartTime = Date.now();
       if (filters.page === 1) {
         setIsLoading(true);
-        setItems([]);
       } else {
         setIsLoadingMore(true);
       }
@@ -205,7 +204,7 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
     run();
 
     return () => controller.abort();
-  }, [filters, refreshTrigger, hasInitialData]);
+  }, [filters, refreshTrigger]);
 
   // Load more when scrolling to bottom
   const loadMore = useCallback(() => {
