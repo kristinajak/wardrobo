@@ -69,36 +69,11 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
   const [hasInitialData, setHasInitialData] = useState(!!initialData);
   const observerTarget = useRef<HTMLDivElement>(null);
   const [searchInput, setSearchInput] = useState(searchQuery);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync searchInput with URL on mount/URL change
   useEffect(() => {
     setSearchInput(searchQuery);
   }, [searchQuery]);
-
-  useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    debounceTimerRef.current = setTimeout(() => {
-      const trimmedInput = searchInput.trim();
-      if (trimmedInput !== searchQuery) {
-        setPage(1);
-        if (trimmedInput) {
-          router.push(`/?search=${encodeURIComponent(trimmedInput)}`);
-        } else {
-          router.push("/");
-        }
-      }
-    }, 500);
-
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [searchInput, searchQuery, router]);
 
   // Listen for upload success events from the Header component
   useEffect(() => {
@@ -309,7 +284,10 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
             <button
               key={example}
               type="button"
-              onClick={() => setSearchInput(example)}
+              onClick={() => {
+                setSearchInput(example);
+                router.push(`/?search=${encodeURIComponent(example)}`);
+              }}
               className="rounded-full bg-p1 text-white px-4 py-1 text-sm transition hover:bg-p2"
             >
               {example}
