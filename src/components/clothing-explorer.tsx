@@ -108,8 +108,8 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
       setHasInitialData(false);
 
       if (page === 1) {
-        setItems([]);
         setIsLoading(true);
+        setItems([]);
       } else {
         setIsLoadingMore(true);
       }
