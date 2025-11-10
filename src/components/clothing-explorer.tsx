@@ -3,6 +3,7 @@
 import Image from "next/image";
 import type { FormEvent } from "react";
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const PAGE_SIZE = 12;
 
@@ -46,21 +47,16 @@ type ApiResponse = {
   };
 };
 
-type Filters = {
-  search: string;
-  page: number;
-};
-
 type ClothingExplorerProps = {
   initialData?: ApiResponse;
 };
 
 export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
-  const [filters, setFilters] = useState<Filters>({
-    search: "",
-    page: 1,
-  });
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get("search") || "";
 
+  const [page, setPage] = useState(1);
   const [items, setItems] = useState<ClothingItem[]>(initialData?.data ?? []);
   const [totalPages, setTotalPages] = useState(
     initialData?.meta.totalPages ?? 1
@@ -72,23 +68,29 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [hasInitialData, setHasInitialData] = useState(!!initialData);
   const observerTarget = useRef<HTMLDivElement>(null);
-
-  // Local input value for immediate UI updates
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState(searchQuery);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Debounced search
+  // Sync searchInput with URL on mount/URL change
+  useEffect(() => {
+    setSearchInput(searchQuery);
+  }, [searchQuery]);
+
   useEffect(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
     debounceTimerRef.current = setTimeout(() => {
-      setFilters((current) => ({
-        ...current,
-        search: searchInput,
-        page: 1,
-      }));
+      const trimmedInput = searchInput.trim();
+      if (trimmedInput !== searchQuery) {
+        setPage(1);
+        if (trimmedInput) {
+          router.push(`/?search=${encodeURIComponent(trimmedInput)}`);
+        } else {
+          router.push("/");
+        }
+      }
     }, 500);
 
     return () => {
@@ -96,13 +98,12 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [searchInput]);
+  }, [searchInput, searchQuery, router]);
 
   // Listen for upload success events from the Header component
   useEffect(() => {
     const handleUploadSuccess = () => {
-      setSearchInput("");
-      setFilters({ search: "", page: 1 });
+      router.push("/");
       setRefreshTrigger((prev) => prev + 1);
     };
 
@@ -113,16 +114,15 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
         handleUploadSuccess
       );
     };
-  }, []);
+  }, [router]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery]);
 
   useEffect(() => {
     // Skip fetch if we're showing initial server-rendered data
-    if (
-      hasInitialData &&
-      filters.page === 1 &&
-      !filters.search &&
-      refreshTrigger === 0
-    ) {
+    if (hasInitialData && page === 1 && !searchQuery && refreshTrigger === 0) {
       return;
     }
 
@@ -132,7 +132,7 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
       setError(null);
       setHasInitialData(false);
 
-      if (filters.page === 1) {
+      if (page === 1) {
         setItems([]);
         setIsLoading(true);
       } else {
@@ -140,9 +140,9 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
       }
 
       try {
-        if (!filters.search.trim()) {
+        if (!searchQuery.trim()) {
           const qs = new URLSearchParams({
-            page: String(filters.page),
+            page: String(page),
             perPage: String(PAGE_SIZE),
           });
           const response = await fetch(`/api/clothes?${qs.toString()}`, {
@@ -152,7 +152,7 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
             throw new Error(`Request failed with status ${response.status}`);
           }
           const payload: ApiResponse = await response.json();
-          if (filters.page > 1) {
+          if (page > 1) {
             setItems((prev) => [...prev, ...payload.data]);
           } else {
             setItems(payload.data);
@@ -166,8 +166,8 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: filters.search,
-            page: filters.page,
+            prompt: searchQuery,
+            page: page,
             perPage: PAGE_SIZE,
           }),
           signal: controller.signal,
@@ -178,7 +178,7 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
         }
 
         const payload: ApiResponse = await response.json();
-        if (filters.page > 1) {
+        if (page > 1) {
           setItems((prev) => [...prev, ...payload.data]);
         } else {
           setItems(payload.data);
@@ -207,18 +207,15 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
 
     return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, refreshTrigger]);
+  }, [searchQuery, page, refreshTrigger]);
 
   // Load more when scrolling to bottom
   const loadMore = useCallback(() => {
-    if (isLoading || isLoadingMore || filters.page >= totalPages) {
+    if (isLoading || isLoadingMore || page >= totalPages) {
       return;
     }
-    setFilters((current) => ({
-      ...current,
-      page: current.page + 1,
-    }));
-  }, [isLoading, isLoadingMore, filters.page, totalPages]);
+    setPage((current) => current + 1);
+  }, [isLoading, isLoadingMore, page, totalPages]);
 
   useEffect(() => {
     const target = observerTarget.current;
@@ -242,15 +239,17 @@ export const ClothingExplorer = ({ initialData }: ClothingExplorerProps) => {
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setFilters((current) => ({
-      ...current,
-      search: searchInput,
-      page: 1,
-    }));
+    const trimmedInput = searchInput.trim();
+    if (trimmedInput) {
+      router.push(`/?search=${encodeURIComponent(trimmedInput)}`);
+    } else {
+      router.push("/");
+    }
   };
 
   const handleClearSearch = () => {
     setSearchInput("");
+    router.push("/");
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {

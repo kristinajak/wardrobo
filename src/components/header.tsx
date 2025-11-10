@@ -24,7 +24,7 @@ export const Header = () => {
         <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-4">
           <Link
             href="/"
-            className="relative h-10 w-40 overflow-hidden sm:h-12 sm:w-48 md:h-14 md:w-56 transition-opacity"
+            className="relative h-10 w-40 overflow-hidden sm:h-12 sm:w-48 md:h-14 md:w-56 transition-opacity hover:opacity-80"
           >
             <Image
               src="/images/logo.png"
